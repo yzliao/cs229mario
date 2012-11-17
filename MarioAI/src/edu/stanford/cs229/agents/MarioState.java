@@ -11,17 +11,15 @@ public class MarioState {
 		this.enemyPresent = findEnemies(environment);
 	}
 	
-	private int marioMode;
+	//0-small, 1-big, 2-fire
+	int marioMode;
 	
 	//high-front, high-back, low-front, low-back
 	private boolean[] enemyPresent;
 	
-//	private boolean highEnemyOnFront;
-//	private boolean highEnemyOnBack;
-//	private boolean lowEnemyOnFront;
-//	private boolean lowEnemyOnBack;
-	
+	//whether there is brick/question nearby
 	private boolean breakableNear;
+	//
 	private boolean mayUpgrade;
 	private boolean marioNearGap;
 	private boolean marioOnGap;
@@ -41,16 +39,43 @@ public class MarioState {
 	// high-back has enemy
 	// low-front has enemy
 	// low-back has enemy
-	private boolean[] findEnemies(Environment environment){
+	boolean[] findEnemies(Environment environment){
 		boolean [] enemyList = {false, false, false, false};
 		//TODO: finish implementing this
 		return enemyList;
 	}
 	
 	// Return a unique number for each different state
-	private int getStateNumber(){
+	int getStateNumber(){
 		//TODO: implement this, return a concatenation of the booleans
 		return 0;
+	}
+	
+	void update(Environment environment){
+		//incorporate observation
+//	    levelScene = environment.getLevelSceneObservationZ(zLevelScene);
+//	    enemies = environment.getEnemiesObservationZ(zLevelEnemies);
+//	    mergedObservation = environment.getMergedObservationZZ(1, 0);
+//
+//	    this.marioFloatPos = environment.getMarioFloatPos();
+//	    this.enemiesFloatPos = environment.getEnemiesFloatPos();
+//	    this.marioState = environment.getMarioState();
+//
+//	    receptiveFieldWidth = environment.getReceptiveFieldWidth();
+//	    receptiveFieldHeight = environment.getReceptiveFieldHeight();
+//
+//	    // It also possible to use direct methods from Environment interface.
+//	    //
+//	    marioStatus = marioState[0];
+//	    marioMode = marioState[1];
+//	    isMarioOnGround = marioState[2] == 1;
+//	    isMarioAbleToJump = marioState[3] == 1;
+//	    isMarioAbleToShoot = marioState[4] == 1;
+//	    isMarioCarrying = marioState[5] == 1;
+//	    getKillsTotal = marioState[6];
+//	    getKillsByFire = marioState[7];
+//	    getKillsByStomp = marioState[8];
+//	    getKillsByShell = marioState[9];
 	}
 	
 }
