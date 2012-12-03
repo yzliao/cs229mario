@@ -1,192 +1,251 @@
+/* Some thoughts on the Mario implementation. What is to be gained from training?
+ * 1. Should the states be rough and abstract? Yes. How abstract? It should be 
+ *    abstract enough that the number of state-action pairs is exceedingly large.
+ *    But if it is too abstract, we may lose the approximate Markov property. 
+ *    (e.g. if the defined Mario state lacks "Mario's position", then suppose
+ *    two original scenes, one with Mario on high platform, the other wiht Mario 
+ *    on low platform, and other parameters the same. They have the same abstract
+ *    state S. But S x Action A -> undetermined for the two scenes.
+ *       With that said, we hope given many trials and a large state space the
+ *    effect is not affecting us.
+ *  
+ * 2. Learning for specific actions (keystrokes) or movement preferences?
+ *    Learning for keystrokes seems to be hard, but can be tolerated. Consider we
+ *    can first hard-code the preferences, and modify the reward function to "unit
+ *    learn" the keystroke combo. For example, we could define first learning unit
+ *    to be "advance", and set reward to be large for every step going rightward.
+ *    Then we train the "search" unit, etc.
+ *      After the units complete, we face the problem that given a scene, what is
+ *    the task to carry out. This can be completed using a higher-level QTable, or
+ *    simply estimate the reward given by carrying out each task, and pick the
+ *    best-rewarded.
+ *        I think the latter approach is easier, but possibly contain bugs. Let's see
+ *    whether is will become a problem.
+ * 
+ * 3. How to let Mario advance?
+ *    -given a scene, abstract to Mario state
+ *    -construct a QTable AdvanceTable, containing State, Action pairs
+ *    -each Action is a combination of keystrokes
+ *    -the MDP is also learned, not predetermined?
+ *    -the reward function: the number of steps rightward taken
+ *    -possible problem: how to let Mario jump through gaps, platforms and enemies?
+ *        -jump until necessary? could give negative rewards for unnecessary jumps
+ *    -the Mario state should contain "complete" information about the scene
+ *        -idea: "poles", where the Mario should be jumping off and how far?
+ * 
+ * */
+
 package edu.stanford.cs229.agents;
 
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
-//import ch.idsia.agents.controllers.BasicMarioAIAgent;
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.mario.environments.Environment;
 import ch.idsia.benchmark.tasks.LearningTask;
+import ch.idsia.tools.EvaluationInfo;
 
+public class MarioRLAgent implements LearningAgent {
 
-public class MarioRLAgent implements LearningAgent
-{
-	//Fields for the Mario Agent
-	public MarioState currentState;
-	public int currentTask;
-	
-	//Associated Qtable for the agent. Used for RL training
-	public Qtable table;
-	
-	//Enumerate denote what stage the Agent is in
-	//init: initial phase
-	//learn: accumulatively update the Qtable
-	enum phase {INIT, LEARN};
-	phase currentPhase;
-	
-	public boolean action[] = new boolean[Environment.numberOfKeys];
-	public String name = "Instance_of_MarioRLAgent._Change_this_name";
+  private static final int ATTACK = 0;
+  private static final int GO = 1;
+  private static final int AVOID = 2;
+  private static final int COLLECT = 3;
+  private static final int SEARCH = 4;
 
-	/*final*/
-	public byte[][] levelScene;
-	/*final */
-	public byte[][] enemies;
-	public byte[][] mergedObservation;
+  // Evaluation task and quota
+  LearningTask learningTask;
+  
+  int learningQuota;
+  
+  // Fields for the Mario Agent
+  public MarioState currentState;
 
-	public float[] marioFloatPos = null;
-	public float[] enemiesFloatPos = null;
+  // Associated Qtable for the agent. Used for RL training.
+  public ActionQtable actionTable;
 
-	public int[] marioState = null;
+  // Evaluation info for previous tick. Used to calculate reward
+  EvaluationInfo prevEva = new EvaluationInfo();
 
-	public int marioStatus;
-	public int marioMode;
-	public boolean isMarioOnGround;
-	public boolean isMarioAbleToJump;
-	public boolean isMarioAbleToShoot;
-	public boolean isMarioCarrying;
-	public int getKillsTotal;
-	public int getKillsByFire;
-	public int getKillsByStomp;
-	public int getKillsByShell;
+  // The type of phase the Agent is in.
+  // INIT: initial phase
+  // LEARN: accumulatively update the Qtable
+  enum Phase {
+    INIT, LEARN
+  };
 
-	public int receptiveFieldWidth;
-	public int receptiveFieldHeight;
-	public int marioEgoRow;
-	public int marioEgoCol;
+  Phase currentPhase;
 
-	// values of these variables could be changed during the Agent-Environment interaction.
-	// Use them to get more detailed or less detailed description of the level.
-	// for information see documentation for the benchmark <link: marioai.org/marioaibenchmark/zLevels
-	int zLevelScene = 1;
-	int zLevelEnemies = 0;
-	
-	//Constructor
-	public MarioRLAgent(String s){
-		setName(s);
-	}
-	
-	
-	@Override
-	//calculate the keystrokes based on current task
-	//also updates the current task field
-	public boolean[] getAction() {
-		// TODO Auto-generated method stub
-		//action[Mario.KEY_SPEED] = action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
-	    
-		int task = table.getBestAction(currentState.getStateNumber());
-		currentTask = task;
-		return bestAction(task);
-	}
+  public String name;
 
-	@Override
-	//read the environment as state?
-	public void integrateObservation(Environment environment) {
-		// TODO Auto-generated method stub
-	    //update the current state
-	    currentState.update(environment);
-	    
-	    
-	}
+  // Constructor
+  public MarioRLAgent() {
+    setName("Super Mario 229");
+    
+    currentState = new MarioState();
 
-	@Override
-	public void giveIntermediateReward(float intermediateReward) {
-		// TODO Auto-generated method stub
-		
-	}
+    /*
+     * Number of different key combinations: there are 6 keys. "UP" not used, so
+     * 2^5 = 32 key combinations 0: left 1: right 2: down 3: jump 4: speed and
+     * the index of one action in the table is simple the decimal representation
+     */
+    int numActions = 32;
+    actionTable = new ActionQtable(numActions);
+  }
 
-	@Override
-	public void reset() {
-		// TODO Auto-generated method stub
-	    action = new boolean[Environment.numberOfKeys];
-	    action[Mario.KEY_RIGHT] = true;
-	    action[Mario.KEY_SPEED] = true;
-	}
+  private boolean getBit(int number, int i) {
+    return (number & (1 << i)) != 0;
+  }
+  
+  @Override
+  public boolean[] getAction() {
+    // Transforms the best action number to action array.
+    int actionNumber = actionTable.getNextAction(currentState.getStateNumber());
+    boolean[] actionToReturn = new boolean[6];
+    actionToReturn[Mario.KEY_LEFT] = getBit(actionNumber, 0);
+    actionToReturn[Mario.KEY_RIGHT] = getBit(actionNumber, 1);
+    actionToReturn[Mario.KEY_JUMP] = getBit(actionNumber, 2);
+    actionToReturn[Mario.KEY_SPEED] = getBit(actionNumber, 3);
+    actionToReturn[Mario.KEY_UP] = false;
+    actionToReturn[Mario.KEY_DOWN] = false;
+    return actionToReturn;
+  }
 
-	@Override
-	public void setObservationDetails(int rfWidth, int rfHeight, int egoRow,
-			int egoCol) {
-		// TODO Auto-generated method stub
-		receptiveFieldWidth = rfWidth;
-	    receptiveFieldHeight = rfHeight;
+  /*
+   * Importance of this function: the scene observation is THE RESULT after
+   * performing some action given the previous state. Therefore we could get
+   * informaion on: 1. prev state x prev action -> current state 2. get the
+   * reward for prev state, prev action pair
+   * 
+   * the reward function, however, is not provided and has to be customized
+   */
+  @Override
+  public void integrateObservation(Environment environment) {
+    // update the current state
+    currentState.update(environment);
+    // update the Qvalue entry in the Qtable
+    actionTable.updateQvalue(
+        calculateReward(environment), currentState.getStateNumber());
+  }
 
-	    marioEgoRow = egoRow;
-	    marioEgoCol = egoCol;
-	}
+  // calculate the reward got from prev and current environmets
+  private int calculateReward(Environment currentEnv) {
+    if (currentPhase == Phase.INIT) {
+      currentPhase = Phase.LEARN;
+      return 0;
+    } else {
+      // First try: reward is given as the distance traveled.
+      EvaluationInfo currentEva = currentEnv.getEvaluationInfo();
 
-	@Override
-	public String getName() {
-		return name;
-	}
+      int reward =
+          - LearningParams.TIME_PENALTY +
+          currentEva.computeWeightedFitness(LearningParams.REWARD_PARAMS) -
+          prevEva.computeWeightedFitness(LearningParams.REWARD_PARAMS);
+      
+      prevEva = currentEnv.getEvaluationInfo().clone();
 
-	@Override
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-/* Variables*/
-// we need variables to represent: state representation, current state, big 
-// reward table for (state, action) pairs
-	
-/* Methods */
+      if (LearningParams.DEBUG) {
+        System.out.println("Reward = " + reward + "\n");
+      }
 
-	// Transform the environment to a state representation
-	// state = getState(Environment);
-	
-	// Calculate the optimal action for this state
-	boolean[] bestAction(int taskNumber){
-		return null;
-	}
+      return reward;
+    }
+  }
 
+  /*
+   * calculate or estimate how the state changes if a certain action is
+   * performed could be hard.
+   */
+  private int getNextState(int actionNumber) {
+    return currentState.getStateNumber();
+  }
 
-	@Override
-	public void learn() {
-		// TODO Auto-generated method stub
-		
-	}
+  @Override
+  public void learn() {
+    System.out.println(learningQuota + " is the learning quota.");
+    int numIterationsToTrain =
+        Math.min(LearningParams.NUM_TRAINING_ITERATIONS, learningQuota);
+    for (int i = 0; i < numIterationsToTrain; ++i) {
+      System.out.println("\n---------------------------------");
+      System.out.println("Trial: " + i);
 
+      learningTask.runSingleEpisode(1);
 
-	@Override
-	public void giveReward(float reward) {
-		// TODO Auto-generated method stub
-		
-	}
+      EvaluationInfo evaluationInfo =
+          learningTask.getEnvironment().getEvaluationInfo();
+      System.out.println(
+          "Intermediate SCORE = " + evaluationInfo.computeWeightedFitness() +
+          "\nDetails: " + evaluationInfo.toStringSingleLine());
+    }
+  }
 
+  @Override
+  // The first episode run initializes the agent.
+  public void newEpisode() {
+    switch (currentPhase) {
+      case INIT:
+        currentPhase = Phase.LEARN;
+        break;
+    }
+  }
 
-	@Override
-	//The first episode run initializes the agent.
-	public void newEpisode() {
-		// TODO Auto-generated method stub
-		switch(currentPhase){
-		case INIT:
-			break;
-		}
-	}
+  /**
+   *  Gives access to the evaluator through learningTask.evaluate(Agent).
+   */
+  @Override
+  public void setLearningTask(LearningTask learningTask) {
+    // TODO Auto-generated method stub
+    this.learningTask = learningTask;
+  }
 
+  /**
+   * Defines the max number of trials to learn. Currently it is 100000.
+   */
+  @Override
+  public void setEvaluationQuota(long num) {
+    // TODO Auto-generated method stub
+    this.learningQuota = (int)num;
+  }
 
-	@Override
-	public void setLearningTask(LearningTask learningTask) {
-		// TODO Auto-generated method stub
-		
-	}
+  @Override
+  public Agent getBestAgent() {
+    return this;
+  }
 
+  @Deprecated
+  @Override
+  public void giveReward(float reward) {
+  }
+  
+  // This function is completely bogus! intermediateReward is not properly given
+  // either modify the intermediate reward calculation or ignore this function
+  // and do reward update elsewhere. forexample when integrating observation.
+  @Deprecated
+  @Override
+  public void giveIntermediateReward(float intermediateReward) {
+    // TODO Auto-generated method stub
+  }
 
-	@Override
-	public void setEvaluationQuota(long num) {
-		// TODO Auto-generated method stub
-		
-	}
+  @Override
+  public void reset() {
+  }
 
+  @Override
+  public void setObservationDetails(
+      int rfWidth, int rfHeight, int egoRow, int egoCol) {
+  }
 
-	@Override
-	public Agent getBestAgent() {
-		// TODO Auto-generated method stub
-		return this;
-	}
+  @Override
+  public String getName() {
+    return name;
+  }
+  
 
+  @Override
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	@Override
-	public void init() {
-		// TODO Auto-generated method stub
-		
-	}
-
+  @Override
+  public void init() {
+  }
 }

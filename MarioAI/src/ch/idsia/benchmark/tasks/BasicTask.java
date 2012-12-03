@@ -83,8 +83,9 @@ public boolean runSingleEpisode(final int repetitionsOfSingleEpisode)
                 boolean[] action = agent.getAction();
                 if (System.currentTimeMillis() - c > COMPUTATION_TIME_BOUND)
                     return false;
-//                System.out.println("action = " + Arrays.toString(action));
-//            environment.setRecording(GlobalOptions.isRecording);
+
+//              System.out.println("action = " + Arrays.toString(action));
+//              environment.setRecording(GlobalOptions.isRecording);
                 environment.performAction(action);
             }
         }

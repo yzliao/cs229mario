@@ -4,7 +4,9 @@ import ch.idsia.benchmark.tasks.SystemOfValues;
 
 public class LearningParams {
   
-  public static final int NUM_TRAINING_ITERATIONS = 20;
+  public static final boolean DEBUG = false;
+  
+  public static final int NUM_TRAINING_ITERATIONS = 50;
 
   public static final int OBSERVATION_SIZE = 5;
 

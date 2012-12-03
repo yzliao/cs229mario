@@ -65,6 +65,8 @@ private static int evaluateSubmission(MarioAIOptions marioAIOptions, LearningAge
     learningAgent.setLearningTask(learningTask);  // gives LearningAgent access to evaluator via method LearningTask.evaluate(Agent)
     learningAgent.init();
     learningAgent.learn(); // launches the training process. numberOfTrials happen here
+    
+    
     Agent agent = learningAgent.getBestAgent(); // this agent will be evaluated
 
     // perform the gameplay task on the same level
@@ -78,20 +80,28 @@ private static int evaluateSubmission(MarioAIOptions marioAIOptions, LearningAge
 
     boolean verbose = true;
 
-    if (!basicTask.runSingleEpisode(1))  // make evaluation on the same episode once
-    {
-        System.out.println("MarioAI: out of computational time per action! Agent disqualified!");
+    int averageScore = 0;
+    System.out.println("\n\n************************\nStarting evaluation!!");
+    for (int i = 0; i < 5; i++) {
+      if (!basicTask.runSingleEpisode(1))  // make evaluation on the same episode once
+      {
+          System.out.println("MarioAI: out of computational time per action! Agent disqualified!");
+      }
+      EvaluationInfo evaluationInfo = basicTask.getEvaluationInfo();
+      System.out.println(evaluationInfo.toString());
+  
+      int f = evaluationInfo.computeWeightedFitness();
+      if (verbose)
+      {
+          System.out.println("Intermediate SCORE = " + f + ";\n Details: " + evaluationInfo.toString());
+      }
+      averageScore += f;
     }
-    EvaluationInfo evaluationInfo = basicTask.getEvaluationInfo();
-    System.out.println(evaluationInfo.toString());
+    
+    averageScore = (int)((1.0 * averageScore) / 5);
+    System.out.println("Average: " + averageScore);
 
-    int f = evaluationInfo.computeWeightedFitness();
-    if (verbose)
-    {
-        System.out.println("Intermediate SCORE = " + f + ";\n Details: " + evaluationInfo.toString());
-    }
-
-    return f;
+    return averageScore;
 }
 
 private static int oldEval(MarioAIOptions marioAIOptions, LearningAgent learningAgent)
@@ -164,7 +174,8 @@ public static void main(String[] args)
 {
     // set up parameters
     MarioAIOptions marioAIOptions = new MarioAIOptions(args);
-//    LearningAgent learningAgent = new MLPESLearningAgent(); // Learning track competition entry goes here
+    
+    // read agent from commadline
     LearningAgent learningAgent = (LearningAgent) marioAIOptions.getAgent();
     System.out.println("main.learningAgent = " + learningAgent);
 

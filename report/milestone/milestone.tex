@@ -40,9 +40,9 @@
 \section{Introduction}
 Using artificial intelligence (AI) and machine learning (ML) algorithms to play computer games has been widely discussed and investigated. Valuable observations can be made on the ML play pattern vs. that of a human player, and such observation provide knowledge on how to improve the algorithms. Mario AI Competition \cite{togelius20102009} is such a competition that uses AI and ML techniques to play the classic title Super Mario Bros. The competition provides the evaluation system and benchmarks for the competitors every year.
 
-Reinforcement Learning (RL) \cite{sutton1998reinforcement} is one widely-studied and promising ML method for implementing agents that can simulate the behavior of a player \cite{tsay2011evolving}. In this project, we study how to construct a Mario controller agent, which can learn from the game environment using the RL approach. One of the difficulties of using RL is how to define state, action, and reward. In addition, the state space cannot be too large, since playing the game requires real-time response, constraining the time to calculate each step of action. We use a state representation similar to \cite{tsay2011evolving}, that abstracts the whole 22x22 environment description array into several key attributes. We use the Q-Learning algorithm to evolve the decision strategy that aims to maximize the reward. Our controller agent is trained and tested by the 2012 Mario AI Competition evaluation system. The results are compared with the competition benchmarks.
+Reinforcement Learning (RL) \cite{sutton1998reinforcement} is one widely-studied and promising ML method for implementing agents that can simulate the behavior of a player \cite{tsay2011evolving}. In this project, we study how to construct a Mario controller agent, which can learn from the game environment using the RL approach. One of the difficulties of using RL is how to define state, action, and reward. In addition, the state space cannot be too large, since playing the game requires real-time response, constraining the time to calculate each step of action. We use a state representation similar to \cite{tsay2011evolving}, that abstracts the whole 22x22 environment description array into several key attributes. We use the Q-Learning algorithm to evolve the decision strategy that aims to maximize the reward. Our controller agent is trained and tested by the 2012 Mario AI Competition evaluation system. 
 
-The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provide implementation progress and early evaluation results; finally Section 5 discusses remaining issues and potential improvements.
+The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provide implementation progress, early evaluation results, and discusses remaining issues and potential improvements.
 
 \section{Background}
 In this section, we briefly introduce Mario AI interfaces and the Q-learning algorithm.
@@ -55,7 +55,7 @@ When performing each step, the Mario AI framework has a call that returns the co
 The benchmark runs the game in 24 frames per second. The environment checking functions are called every frame. Therefore, while training we have to train and update the Qtable within 42 milliseconds.
 
 \subsection{Q-Learning}
-Q-learning treats the learning environment as a state machine. Q-learning collects several environment variables and define them as some states. The learning process always on some states in Q-learning algorithm. Each state is assigned a unique state number. Q-value is computed for each pair of state and action and is saved in Q-table. Here, $Q(s,a)$ denotes the Q-value, where $s$ is the state and $a$ is the action. For each action in a particular state, a reward will be given. The Q-value is updated based on reward by following rule:
+Q-learning treats the learning environment as a state machine, and maintains a reward value, denoted by Q, for each pair of (state, action) in a table. Here, $Q(s,a)$ denotes the Q-value, where $s$ is the state and $a$ is the action. For each action in a particular state, a reward will be given. The Q-value is updated based on reward by following rule:
 \begin{equation}
 \label{eq:Qupdate}
 Q(s_t,a_t) \leftarrow (1-\alpha)Q(s_t,a_t) + \alpha(r+\gamma\max(Q(s_{t+1},a_{t+1})))
@@ -63,15 +63,15 @@ Q(s_t,a_t) \leftarrow (1-\alpha)Q(s_t,a_t) + \alpha(r+\gamma\max(Q(s_{t+1},a_{t+
 In the Q-learning algorithm, there are four main factors: current state, chosen action, reward and future state. In (\ref{eq:Qupdate}), $Q(s_t,a_t)$ denotes the Q-value of current state and $Q(s_{t+1},a_{t+1})$ denotes the Q-value of future state. $a \in \left[0,1\right]$ is the learning rate, $\gamma \left[0,1\right]$ is the discount rate, and $r$ is the reward. (\ref{eq:Qupdate}) shows that for each current state, we update the Q-value based on the maximum Q-value of the next state.
 
 \section{Mario Controller Design Using Q-Learning}
-To illustrate why state space size is a problem, consider using the native 22x22 grid representation. There are 19 possibility for each block. Now if we take a $22\times 22$ grid, there are totally
+To illustrate why state space size is a problem, consider using the native 22x22 grid representation. There are 13 possibilities for each block. Now if we take a $22\times 22$ grid, there are totally
 \begin{equation}
-19^{22\times 22 - 1}
+13^{22\times 22 - 1}
 \end{equation}
 states, which by no means our algorithm can handle. We therefore use a state abstraction similar to \cite{tsay2011evolving}. The 7 attributes our state has are:
 
 \begin{itemize}
 \item Mario mode: 0 - small, 1 - big, 2-fire
-\item Enemy present?: a 4-bit field denoting whether there is an enemy in 4 certain directions. From 1st to 4th bit denotes higher front, higher back, ground front, ground back.
+\item Enemy present: a 4-bit field denoting whether there is an enemy in 4 certain directions. From 1st to 4th bit denotes higher front, higher back, ground front, ground back.
 \item Brick exist: 1 - there exist a brick/question mark within a given range; 0 -- there does not exist a brick within a given range
 \item Item exist: type of most valuable items nearby. 0-no item, 1-coin, 2-mushroom, 3-flower
 \item Near gap: weather or not there is a gap within a given range
@@ -79,7 +79,7 @@ states, which by no means our algorithm can handle. We therefore use a state abs
 \item Enemy type: represent the enemy type within a given range
 \end{itemize}
 
-As a results, we have a total of $3\times 2^11 = 6144$ states, which is still large, but viable.
+As a results, we have a total of $3\times 2^{11} = 6144$ states, which is still large, but explorable.
 
 We also abstract the actions available by creating "tasks" for Mario to choose. Each task may consist a series of keystrokes. Once a task is chosen, the corresponding keystrokes are determined from the environment observations using heuristics. In short, we learn the preferences and code the detailed operations. The 4 tasks are:
 \begin{itemize}
@@ -92,11 +92,17 @@ We also abstract the actions available by creating "tasks" for Mario to choose. 
 
 Now, we reduce the number of state-action pairs to $6144\times 5 = 30720$.
 
-\section{Preliminary Results}
+We use the final score measure defined in the evaluation of Mario AI framework as our reward function, which is a weighted sum of the physical distance crossed, number of coins obtained, current Mario mode, etc.
 
+\section{Progress and Preliminary Results}
+We were able to implement the Q learning algorithm, the abstractions of Mario state and tasks using Java. The specific choice of keystrokes for each task is coded as predetermined. For example, if Mario is going to perform "Attack monster" task, he will jump if the foe is high, and he will shoot fireball to the direction of the foe. We note, however, another alternative is to run another RL state machine to learn the optimal keystrokes as in \cite{mohan2011object}. We will discuss the alternative in next section.
 
-\section{Next Step}
-For the rest of this project, we are going to train the Q-table based on the algorithms given above. Then we will compare our results with the benchmark. In addition, instead using self-defined reward rule, we will use the reward rule given by the evaluation system. Further, rather than updating Q-value every frame, we will update it every two or five frames. In this case, we relax the constraint on computational complexity. It allows us to implement a more complicated state-action space.
+With the preliminary design, our agent obtains an average score comparable to that of a simple Forward-and-Jump agent after 1000 episode trained. We haven't yet compared with other agents.
+
+\subsection{Next Step}
+We consider several improvements to our project. First, we will consider use a second state machine to learn the optimal keystrokes as to increase performance of the tasks. Second, rather than updating Q-value every frame, we consider updating it every two or five frames. Updating every frame may not be necessary, since we found in many occasions, Mario's position only changes little in one frame, therefore neither the state nor the task should change in one frame's time. Updating less often allows us to relax the constraint on computational complexity.
+Finally, we will tune the parameters in Q-learning to optimize our agent, and compare our results with the competition benchmarks.
+
 
 \newpage
 \bibliographystyle{ieeetr}
