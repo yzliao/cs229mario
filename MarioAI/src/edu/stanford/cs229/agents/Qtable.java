@@ -1,7 +1,12 @@
 package edu.stanford.cs229.agents;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Adapted from http://www.itu.dk/courses/MAIG/E2011/Exercises/QLearning.java
@@ -11,7 +16,7 @@ public abstract class Qtable {
   /**
    * for creating random numbers
    */
-  private Random randomGenerator;
+  Random randomGenerator;
 
   /**
    * the table variable stores the Q-table, where the state is saved as the
@@ -25,7 +30,7 @@ public abstract class Qtable {
    * map state, and therefore the number of Q values in each entry of the
    * Q-table.
    */
-  private int actionRange;
+  int actionRange;
 
   // E-GREEDY Q-LEARNING SPECIFIC VARIABLES
   /**
@@ -44,7 +49,7 @@ public abstract class Qtable {
    * near 1 (but below 1) the AI will try to maximize the long-term reward even
    * if it is many moves away.
    */
-  float gammaValue = LearningParams.GAMA_VALUE;
+  float gammaValue = LearningParams.GAMMA_VALUE;
 
   /**
    * the learningRate determines how new information affects accumulated
@@ -122,7 +127,6 @@ public abstract class Qtable {
    */
   int explore() {
     return randomGenerator.nextInt(actionRange);
-    // return 0;
   }
 
   /**
@@ -135,20 +139,7 @@ public abstract class Qtable {
    * @param reward The reward at the current state.
    * @param currentStateNumber The current state number.
    */
-  void updateQvalue(int reward, int currentStateNumber) {
-    // Q(prevState, prevAction) =
-    //     alpha * Qprev + (1-alpha) * (reward + gamma * maxQ)
-    int bestAction = getBestAction(currentStateNumber);
-    float maxQ = getActionsQValues(currentStateNumber)[bestAction];
-
-    float[] prevQs = getActionsQValues(prevState);
-    float prevQ = prevQs[prevAction];
-
-    float newQ = learningRate * prevQ + 
-        (1 - learningRate) * (reward + gammaValue * maxQ);
-    prevQs[prevAction] = newQ;
-    //table.put(prevState, prevQs);
-  }
+  abstract void updateQvalue(int reward, int currentStateNumber);
 
   /**
    * The getActionsQValues function returns an array of Q values for all the
@@ -161,36 +152,16 @@ public abstract class Qtable {
    */
   float[] getActionsQValues(int stateNumber) {
     if (!table.containsKey(stateNumber)) {
-      float[] initialActions = new float[actionRange];
-      for (int i = 0; i < actionRange; i++) {
-        initialActions[i] = 0f;
-      }
-      table.put(stateNumber, initialActions);
-      return initialActions;
+      float[] initialQvalues = getInitialQvalues(stateNumber);
+      table.put(stateNumber, initialQvalues);
+      return initialQvalues;
     }
-
     return table.get(stateNumber);
   }
-
-  /**
-   * printQtable is included for debugging purposes and uses the action labels
-   * used in the maze class (even though the Qtable is written so that it can
-   * more generic).
-   */
-  void printQtable() {
-    // TODO: change this
-
-    // Iterator iterator = table.keySet().iterator();
-    // while (iterator.hasNext()) {
-    // char[] key = (char[])iterator.next();
-    // float[] values = getValues(key);
-    //
-    // System.out.print(key[0]+""+key[1]+""+key[2]);
-    // System.out.println("  UP   RIGHT  DOWN  LEFT" );
-    // System.out.print(key[3]+""+key[4]+""+key[5]);
-    // System.out.println(": " +
-    // values[0]+"   "+values[1]+"   "+values[2]+"   "+values[3]);
-    // System.out.println(key[6]+""+key[7]+""+key[8]);
-    // }
+  
+  abstract float[] getInitialQvalues(int stateNumber);
+  
+  Hashtable<Integer, float[]> getTable() {
+    return table;
   }
 };

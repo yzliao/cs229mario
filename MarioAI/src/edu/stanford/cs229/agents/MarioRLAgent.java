@@ -37,6 +37,10 @@
 
 package edu.stanford.cs229.agents;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
@@ -45,12 +49,6 @@ import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
 
 public class MarioRLAgent implements LearningAgent {
-
-  private static final int ATTACK = 0;
-  private static final int GO = 1;
-  private static final int AVOID = 2;
-  private static final int COLLECT = 3;
-  private static final int SEARCH = 4;
 
   // Evaluation task and quota
   LearningTask learningTask;
@@ -63,17 +61,17 @@ public class MarioRLAgent implements LearningAgent {
   // Associated Qtable for the agent. Used for RL training.
   public ActionQtable actionTable;
 
-  // Evaluation info for previous tick. Used to calculate reward
-  EvaluationInfo prevEva = new EvaluationInfo();
+  // Number of nearby enemies in previous tick
+  int prevNearEnemies;
 
   // The type of phase the Agent is in.
   // INIT: initial phase
   // LEARN: accumulatively update the Qtable
   enum Phase {
-    INIT, LEARN
+    INIT, LEARN, EVAL
   };
 
-  Phase currentPhase;
+  Phase currentPhase = Phase.INIT;
 
   public String name;
 
@@ -82,81 +80,53 @@ public class MarioRLAgent implements LearningAgent {
     setName("Super Mario 229");
     
     currentState = new MarioState();
-
-    /*
-     * Number of different key combinations: there are 6 keys. "UP" not used, so
-     * 2^5 = 32 key combinations 0: left 1: right 2: down 3: jump 4: speed and
-     * the index of one action in the table is simple the decimal representation
-     */
-    int numActions = 32;
-    actionTable = new ActionQtable(numActions);
-  }
-
-  private boolean getBit(int number, int i) {
-    return (number & (1 << i)) != 0;
+    actionTable = new ActionQtable(MarioAction.TOTAL_ACTIONS);
+    System.out.println("*************************************************");
+    System.out.println("*                                               *");
+    System.out.println("*                 Agent created!                *");
+    System.out.println("*                                               *");
+    System.out.println("*************************************************");
   }
   
   @Override
   public boolean[] getAction() {
     // Transforms the best action number to action array.
     int actionNumber = actionTable.getNextAction(currentState.getStateNumber());
-    boolean[] actionToReturn = new boolean[6];
-    actionToReturn[Mario.KEY_LEFT] = getBit(actionNumber, 0);
-    actionToReturn[Mario.KEY_RIGHT] = getBit(actionNumber, 1);
-    actionToReturn[Mario.KEY_JUMP] = getBit(actionNumber, 2);
-    actionToReturn[Mario.KEY_SPEED] = getBit(actionNumber, 3);
-    actionToReturn[Mario.KEY_UP] = false;
-    actionToReturn[Mario.KEY_DOWN] = false;
-    return actionToReturn;
+    if (LearningParams.DEBUG) {
+      System.out.println("Next action: " + actionNumber + "\n");
+    }
+    boolean[] action = MarioAction.getAction(actionNumber);
+    /*if (!currentState.canJump()) {
+      action[Mario.KEY_JUMP] = false;
+    }*/
+    
+    return action;
   }
 
-  /*
+  /**
    * Importance of this function: the scene observation is THE RESULT after
    * performing some action given the previous state. Therefore we could get
-   * informaion on: 1. prev state x prev action -> current state 2. get the
-   * reward for prev state, prev action pair
+   * information on:
+   *     1. prev state x prev action -> current state.
+   *     2. get the reward for prev state, prev action pair.
    * 
-   * the reward function, however, is not provided and has to be customized
+   * The reward function, however, is not provided and has to be customized.
    */
   @Override
   public void integrateObservation(Environment environment) {
-    // update the current state
-    currentState.update(environment);
-    // update the Qvalue entry in the Qtable
-    actionTable.updateQvalue(
-        calculateReward(environment), currentState.getStateNumber());
-  }
-
-  // calculate the reward got from prev and current environmets
-  private int calculateReward(Environment currentEnv) {
-    if (currentPhase == Phase.INIT) {
+    if (currentPhase == Phase.INIT && environment.isMarioOnGround()) {
+      // Start learning after Mario lands on the ground.
+      System.out.println("============== Learning Phase =============");
       currentPhase = Phase.LEARN;
-      return 0;
+      currentState.update(environment);
     } else {
-      // First try: reward is given as the distance traveled.
-      EvaluationInfo currentEva = currentEnv.getEvaluationInfo();
-
-      int reward =
-          - LearningParams.TIME_PENALTY +
-          currentEva.computeWeightedFitness(LearningParams.REWARD_PARAMS) -
-          prevEva.computeWeightedFitness(LearningParams.REWARD_PARAMS);
+      // Update the current state.
+      currentState.update(environment);
       
-      prevEva = currentEnv.getEvaluationInfo().clone();
-
-      if (LearningParams.DEBUG) {
-        System.out.println("Reward = " + reward + "\n");
-      }
-
-      return reward;
+      // Update the Qvalue entry in the Qtable.
+      actionTable.updateQvalue(
+          currentState.calculateReward(), currentState.getStateNumber());
     }
-  }
-
-  /*
-   * calculate or estimate how the state changes if a certain action is
-   * performed could be hard.
-   */
-  private int getNextState(int actionNumber) {
-    return currentState.getStateNumber();
   }
 
   @Override
@@ -164,28 +134,62 @@ public class MarioRLAgent implements LearningAgent {
     System.out.println(learningQuota + " is the learning quota.");
     int numIterationsToTrain =
         Math.min(LearningParams.NUM_TRAINING_ITERATIONS, learningQuota);
+    
+    String logfile = "LearningScores.txt";
+    StringBuilder sb = new StringBuilder();
+    
     for (int i = 0; i < numIterationsToTrain; ++i) {
-      System.out.println("\n---------------------------------");
+      System.out.println("==============================================");
       System.out.println("Trial: " + i);
 
       learningTask.runSingleEpisode(1);
 
       EvaluationInfo evaluationInfo =
           learningTask.getEnvironment().getEvaluationInfo();
+      
+      int f = evaluationInfo.computeWeightedFitness();
       System.out.println(
-          "Intermediate SCORE = " + evaluationInfo.computeWeightedFitness() +
-          "\nDetails: " + evaluationInfo.toStringSingleLine());
-    }
-  }
+          "Intermediate SCORE = " + f + "\n" +
+          "Details: " + evaluationInfo.toStringSingleLine());
+      
+      sb.append(String.format("%d\n", f));
 
-  @Override
-  // The first episode run initializes the agent.
-  public void newEpisode() {
-    switch (currentPhase) {
-      case INIT:
-        currentPhase = Phase.LEARN;
-        break;
+      // Dump the info of the most visited states into file.
+      if (LearningParams.DUMP_QTABLE) {
+        actionTable.dumpQtable("qt." + i + ".txt");
+      }
+      //actionTable.dumpQtableTopStates("qt.top." + i + ".txt", 8);
     }
+    
+    // Entering EVAL phase.
+    System.out.println("============== EVAL PHASE =============");
+    currentPhase = Phase.EVAL;
+    
+    actionTable.dumpQtable("qt.final.txt");
+
+    // Save scores to file.
+    byte data[] = sb.toString().getBytes();
+    try {
+      OutputStream out = new FileOutputStream(logfile);
+      out.write(data, 0, data.length);
+    } catch (IOException x) {
+      System.err.println(x);
+    }
+    
+    // Set learning and exploration chance for evaluations.
+    actionTable.learningRate = LearningParams.EVAL_LEARNING_RATE;
+    actionTable.explorationChance = LearningParams.EVAL_EXPLORATION_CHANCE;
+
+    //LearningParams.DEBUG = true;
+  }
+  
+  @Override
+  public void reset() {
+    if (currentPhase != Phase.EVAL) {
+      System.out.println("=================== Init =================");
+      currentPhase = Phase.INIT;
+    }
+    currentState = new MarioState();
   }
 
   /**
@@ -193,7 +197,6 @@ public class MarioRLAgent implements LearningAgent {
    */
   @Override
   public void setLearningTask(LearningTask learningTask) {
-    // TODO Auto-generated method stub
     this.learningTask = learningTask;
   }
 
@@ -202,7 +205,6 @@ public class MarioRLAgent implements LearningAgent {
    */
   @Override
   public void setEvaluationQuota(long num) {
-    // TODO Auto-generated method stub
     this.learningQuota = (int)num;
   }
 
@@ -210,25 +212,7 @@ public class MarioRLAgent implements LearningAgent {
   public Agent getBestAgent() {
     return this;
   }
-
-  @Deprecated
-  @Override
-  public void giveReward(float reward) {
-  }
   
-  // This function is completely bogus! intermediateReward is not properly given
-  // either modify the intermediate reward calculation or ignore this function
-  // and do reward update elsewhere. forexample when integrating observation.
-  @Deprecated
-  @Override
-  public void giveIntermediateReward(float intermediateReward) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void reset() {
-  }
-
   @Override
   public void setObservationDetails(
       int rfWidth, int rfHeight, int egoRow, int egoCol) {
@@ -245,7 +229,27 @@ public class MarioRLAgent implements LearningAgent {
     this.name = name;
   }
 
+  @Deprecated
   @Override
   public void init() {
+  }
+
+  @Deprecated
+  @Override
+  public void newEpisode() {
+  }
+
+  @Deprecated
+  @Override
+  public void giveReward(float reward) {
+  }
+  
+  // This function is completely bogus! intermediateReward is not properly given
+  // either modify the intermediate reward calculation or ignore this function
+  // and do reward update elsewhere. forexample when integrating observation.
+  @Deprecated
+  @Override
+  public void giveIntermediateReward(float intermediateReward) {
+    // TODO Auto-generated method stub
   }
 }

@@ -52,15 +52,15 @@ public class MarioSystemOfValues extends SystemOfValues
 final public int distance = 1;
 final public int win = 1024;
 final public int mode = 32;
-final public int coins = 16;
-final public int hiddenItems = 24;
-final public int flowerFire = 64;  // not used for now
-final public int kills = 42;
-final public int killedByFire = 4;
-final public int killedByShell = 17;
-final public int killedByStomp = 12;
-final public int timeLeft = 8;
-final public int hiddenBlocks = 24;
+final public int coins = 0;
+final public int hiddenItems = 0;
+final public int flowerFire = 0;  // not used for now
+final public int kills = 0;
+final public int killedByFire = 0;
+final public int killedByShell = 0;
+final public int killedByStomp = 0;
+final public int timeLeft = 10;
+final public int hiddenBlocks = 0;
 
 public interface timeLengthMapping
 {
