@@ -1,5 +1,12 @@
 package edu.stanford.cs229.agents;
 
+import java.util.List;
+
+/**
+ * Utility methods.
+ * 
+ * @author zheyang@stanford.edu (Zhe Yang)
+ */
 public class Utils {
 
   public static boolean getBit(int number, int i) {
@@ -25,13 +32,13 @@ public class Utils {
     return sb.reverse().toString();
   }
   
-  public static String join(Object[] items, String separator) {
+  public static String join(List<? extends Object> items, String separator) {
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < items.length; i++) {
+    for (int i = 0; i < items.size(); i++) {
       if (i > 0) {
         sb.append(separator);
       }
-      sb.append(items[i].toString());
+      sb.append(items.get(i).toString());
     }
     return sb.toString();
   }

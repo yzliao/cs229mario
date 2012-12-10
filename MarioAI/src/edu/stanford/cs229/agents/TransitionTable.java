@@ -2,22 +2,18 @@ package edu.stanford.cs229.agents;
 
 import java.util.Hashtable;
 
+/**
+ * Transition table that keeps track of transitions.
+ * 
+ * @author zheyang@stanford.edu (Zhe Yang)
+ */
 public class TransitionTable {
-  
-  private static final float DEFAULT_PROBABILITY = 0.000001F;
   
   public static class ActionData {
     private int actionCount = 0;
     
     private Hashtable<Long, Integer> transitions =
         new Hashtable<Long, Integer>();
-    
-    public float getProbability(long toState) {
-      if (!transitions.containsKey(toState)) {
-        return DEFAULT_PROBABILITY;
-      }
-      return (1.0F * transitions.get(toState)) / actionCount;
-    }
     
     public int getActionCount() {
       return actionCount;

@@ -2,6 +2,11 @@ package edu.stanford.cs229.agents;
 
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
 
+/**
+ * Mario actions.
+ * 
+ * @author zheyang@stanford.edu (Zhe Yang)
+ */
 public enum MarioAction {
 
   DO_NOTHING(0),

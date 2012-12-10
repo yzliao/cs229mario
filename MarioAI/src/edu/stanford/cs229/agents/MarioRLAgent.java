@@ -48,6 +48,11 @@ import ch.idsia.benchmark.mario.environments.Environment;
 import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
 
+/**
+ * The learning agent.
+ * 
+ * @author kunyi@stanford.edu (Kun Yi)
+ */
 public class MarioRLAgent implements LearningAgent {
 
   private String name;
@@ -188,7 +193,7 @@ public class MarioRLAgent implements LearningAgent {
     Logger.println(1, "** Dumping scores to " + logfile + " **");
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(logfile));
-      writer.write(Utils.join(scores.toArray(), "\n"));
+      writer.write(Utils.join(scores, "\n"));
       writer.close();
     } catch (Exception x) {
       System.err.println("Failed to write scores.");

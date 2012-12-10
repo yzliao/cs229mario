@@ -9,7 +9,8 @@ import ch.idsia.benchmark.mario.environments.Environment;
 
 /**
  * Abstract representation of the game environment.
- * @author kunyi@stanford.edu
+ * 
+ * @author kunyi@stanford.edu (Kun Yi)
  */
 public class MarioState {
   
@@ -21,6 +22,7 @@ public class MarioState {
   // 0-small, 1-big, 2-fire.
   private Int marioMode = new Int("m", 2);
   
+  // 0~8.
   private Int marioDirection = new Int("Dir", 8);
   private float marioX = 0;
   private float marioY = 0;
@@ -75,7 +77,8 @@ public class MarioState {
   
   public MarioState() {
     for (int i = 0; i < LearningParams.NUM_OBSERVATION_LEVELS; i++) {
-      enemies[i] = new BitArray("e" + i, Region.NUM_REGIONS);
+      // Enemy directions: 0~7.
+      enemies[i] = new BitArray("e" + i, 8);
     }
   }
   
@@ -115,7 +118,7 @@ public class MarioState {
       stuckCount = 0;
       stuck.value = 0;
     }
-    if (stuckCount >= LearningParams.MAX_NUM_STUCK_FRAMES) {
+    if (stuckCount >= LearningParams.NUM_STUCK_FRAMES) {
       stuck.value = 1;
     }
     
@@ -155,10 +158,11 @@ public class MarioState {
         if (scene[y][x] == Sprite.KIND_GOOMBA ||
             scene[y][x] == Sprite.KIND_SPIKY) {
           int i = getObservationLevel(x, y);
-          if (i < 0) {
+          int d = getDirection(x - MARIO_X, y - MARIO_Y);
+          if (i < 0 || d == Direction.NONE) {
             continue;
           }
-          enemies[i].value[getRegion(x, y)] = true;
+          enemies[i].value[d] = true;
           enemiesCount[i]++;
           totalEnemiesCount++;
         }
@@ -194,9 +198,6 @@ public class MarioState {
       gaps[i] = getDistanceToGround(scene, MARIO_X + i) < 0;
     }*/
     
-    // Win?
-    //win.value = environment.getMarioStatus() == Mario.STATUS_WIN ? 1 : 0;
-    
     this.computeStateNumber();
     
     Logger.println(2, this);
@@ -221,8 +222,6 @@ public class MarioState {
         collisionsWithCreatures.value * LearningParams.REWARD_PARAMS.collision +
         enemiesKilledByFire.value * LearningParams.REWARD_PARAMS.killedByFire +
         enemiesKilledByStomp.value * LearningParams.REWARD_PARAMS.killedByStomp;
-    
-    reward -= LearningParams.TIME_PENALTY;
     
     Logger.println(2, "D: " + dDistance);
     Logger.println(2, "H:" + dElevation);
@@ -257,17 +256,7 @@ public class MarioState {
   
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    for (Field field : fields) {
-      if (first) {
-        first = false;
-      } else {
-        sb.append(" | ");
-      }
-      sb.append(field.toString());
-    }
-    return sb.toString();
+    return Utils.join(fields, " | ");
   }
   
   public static String printStateNumber(long state) {
@@ -300,24 +289,6 @@ public class MarioState {
     return -1;
   }
 
-  private int getRegion(int x, int y) {
-    if (x < MARIO_X) {
-      return Region.BEHIND;
-    } else if (x == MARIO_X) {
-      if (y < MARIO_Y) {
-        return Region.ABOVE;
-      } else {
-        return Region.BELOW;
-      }
-    } else if (y < MARIO_Y) {
-      return Region.FRONT_BELOW;
-    } else if (y >= MARIO_Y && y <= MARIO_Y + getMarioHeight()) {
-      return Region.FRONT;
-    } else {
-      return Region.FRONT_ABOVE;
-    }
-  }
-  
   /**
    * Computes the distance from Mario to the ground. This method will return -1
    * if there's no ground below Mario.
@@ -347,15 +318,15 @@ public class MarioState {
   }
   
   public static class Direction {
-    public static final int NONE = 0;
-    public static final int UP = 1;
-    public static final int UP_RIGHT = 2;
-    public static final int RIGHT = 3;
-    public static final int DOWN_RIGHT = 4;
-    public static final int DOWN = 5;
+    public static final int UP = 0;
+    public static final int RIGHT = 1;
+    public static final int DOWN = 2;
+    public static final int LEFT = 3;
+    public static final int UP_RIGHT = 4;
+    public static final int DOWN_RIGHT = 5;
     public static final int DOWN_LEFT = 6;
-    public static final int LEFT = 7;
-    public static final int UP_LEFT = 8;
+    public static final int UP_LEFT = 7;
+    public static final int NONE = 8;
   }
   
   private static final float DIRECTION_THRESHOLD = 0.8f;
@@ -386,29 +357,6 @@ public class MarioState {
       return Direction.UP_LEFT;
     }
     return Direction.NONE;
-  }
-  
-  /**
-   * Screen is divided into 5 regions as shown below. For each region, we set
-   * whether an enemy is present in that region.
-   *  _______________________________
-   * |        |       |   s          |
-   * |        | Above | Front Above |
-   * |        |_______|_____________|
-   * | Behind | Mario |   Front     |
-   * |        |_______|_____________|
-   * |        | Below | Front Below |
-   * |________|_______|_____________|
-   */
-  public static class Region {
-    public static final int ABOVE = 0;
-    public static final int FRONT_ABOVE = 1;
-    public static final int FRONT = 2;
-    public static final int FRONT_BELOW = 3;
-    public static final int BELOW = 4;
-    public static final int BEHIND = 5;
-    
-    public static final int NUM_REGIONS = 6;
   }
   
   public abstract class Field {

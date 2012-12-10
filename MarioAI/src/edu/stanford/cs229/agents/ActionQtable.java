@@ -6,20 +6,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-/* Stores and picks best action for mario advancing right
+/**
+ * Q table implementation of the cs229 learning agent.
  * 
- * */
+ * @author kunyi@stanford.edu (Kun Yi)
+ */
 public class ActionQtable extends Qtable {
 
   TransitionTable transitions;
 
-  ActionQtable(int actionRange) {
+  public ActionQtable(int actionRange) {
     super(actionRange);
     transitions = new TransitionTable(actionRange);
   }
 
   @Override
-  int getBestAction(long stateNumber) {
+  public int getBestAction(long stateNumber) {
     float[] rewards = this.getActionsQValues(stateNumber);
     if (rewards == null) {
       System.err.println("No rewards defined for this state");
@@ -28,25 +30,22 @@ public class ActionQtable extends Qtable {
       float maxRewards = Float.NEGATIVE_INFINITY;
       int indexMaxRewards = 0;
 
-      Logger.print(4, "Q values: ");
-
       for (int i = 0; i < rewards.length; i++) {
-        //Logger.println(3, rewards[i]);
         if (maxRewards < rewards[i]) {
           maxRewards = rewards[i];
           indexMaxRewards = i;
         }
-
-        Logger.print(4, (i > 0 ? ", " : "") + rewards[i]);
       }
+
+      Logger.println(4, "Q values: " + Utils.join(rewards, ", "));
+      Logger.println(4, "Best action: " + indexMaxRewards);
       
-      Logger.println(4, "\nBest action: " + indexMaxRewards);
       return indexMaxRewards;
     }
   }
   
   @Override
-  void updateQvalue(float reward, long currentStateNumber) {
+  public void updateQvalue(float reward, long currentStateNumber) {
     transitions.addTransition(prevState, prevAction, currentStateNumber);
     
     // Update Q values using the following update rule:
@@ -98,15 +97,12 @@ public class ActionQtable extends Qtable {
   public void dumpQtable(String logfile) {
     Logger.println(1, "** Dumping Qtable to " + logfile + " **");
     
-    StringBuilder sb = new StringBuilder();
-    for (long key : getTable().keySet()){
-      sb.append(printState(key));
-      sb.append("\n");
-    }
-
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(logfile));
-      writer.write(sb.toString());
+      writer.write("");
+      for (long key : getTable().keySet()){
+        writer.append(printState(key) + "\n");
+      }
       writer.close();
     } catch (IOException x) {
       System.err.println("Failed to write qtable to: " + logfile);

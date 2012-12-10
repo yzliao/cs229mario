@@ -9,6 +9,11 @@ import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
 import ch.idsia.tools.MarioAIOptions;
 
+/**
+ * Class to evaluate performance.
+ * 
+ * @author zheyang@stanford.edu (Zhe Yang)
+ */
 public class Evaluation {
   
   private MarioAIOptions marioAIOptions;
@@ -29,18 +34,19 @@ public class Evaluation {
   
   private void train() {
     //marioAIOptions.setEnemies("off");
-    
-    learningAgent.setEvaluationQuota(
-        LearningParams.NUM_TRAINING_ITERATIONS / 3);
 
-    marioAIOptions.setMarioMode(0);
-    learningAgent.learn();
-    
-    marioAIOptions.setMarioMode(1);
-    learningAgent.learn();
-    
-    marioAIOptions.setMarioMode(2);
-    learningAgent.learn();
+    learningAgent.setEvaluationQuota(
+        LearningParams.NUM_TRAINING_ITERATIONS /
+        LearningParams.NUM_MODES_TO_TRAIN / LearningParams.NUM_SEEDS_TO_TRAIN);
+
+    for (int i = 0; i < LearningParams.NUM_MODES_TO_TRAIN; i++) {
+      marioAIOptions.setMarioMode(i);
+      learningAgent.learn();
+      for (int j = 1; j < LearningParams.NUM_SEEDS_TO_TRAIN; j++) {
+        marioAIOptions.setLevelRandSeed(getSeed());
+        learningAgent.learn();
+      }
+    }
   }
 
   public int getSeed() {
@@ -52,12 +58,8 @@ public class Evaluation {
 
     marioAIOptions.setVisualization(true);
     marioAIOptions.setAgent(agent);
-
-    // Set to a different seed for evaluation.
-    marioAIOptions.setLevelRandSeed(getSeed());
     
     BasicTask basicTask = new BasicTask(marioAIOptions);
-    basicTask.setOptionsAndReset(marioAIOptions);
     
     Logger.println(0, "*************************************************");
     Logger.println(0, "*                                               *");
@@ -70,6 +72,12 @@ public class Evaluation {
 
     int averageScore = 0;
     for (int i = 0; i < LearningParams.NUM_EVAL_ITERATIONS; i++) {
+      // Set to a different seed for evaluation.
+      if (LearningParams.USE_DIFFERENT_SEED_FOR_EVAL) {
+        marioAIOptions.setLevelRandSeed(getSeed());
+        //basicTask.setOptionsAndReset(marioAIOptions);
+      }
+         
       // Make evaluation on the same episode once.
       if (!basicTask.runSingleEpisode(1)) {
         System.err.println("MarioAI: out of computational time per action!");

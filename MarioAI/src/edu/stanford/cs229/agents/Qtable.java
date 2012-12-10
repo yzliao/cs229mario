@@ -111,7 +111,7 @@ public abstract class Qtable {
    *          current map (state)
    * @return the action with the highest Q value
    */
-  abstract int getBestAction(long stateNumber);
+  public abstract int getBestAction(long stateNumber);
 
   /**
    * The explore function is called for e-greedy algorithms. It can choose an
@@ -120,7 +120,7 @@ public abstract class Qtable {
    * 
    * @return index of action to take
    */
-  int explore() {
+  private int explore() {
     return randomGenerator.nextInt(actionRange);
   }
 
@@ -134,7 +134,7 @@ public abstract class Qtable {
    * @param reward The reward at the current state.
    * @param currentStateNumber The current state number.
    */
-  abstract void updateQvalue(float reward, long currentStateNumber);
+  public abstract void updateQvalue(float reward, long currentStateNumber);
 
   /**
    * The getActionsQValues function returns an array of Q values for all the

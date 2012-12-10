@@ -1,5 +1,10 @@
 package edu.stanford.cs229.agents;
 
+/**
+ * A simple class for printing debug messages based on current debug level.
+ * 
+ * @author zheyang@stanford.edu (Zhe Yang)
+ */
 public class Logger {
 
   public static void println(int level, String message) {
