@@ -32,7 +32,7 @@ for i = 1:numFiles
     for j = 1:length(lines)
         line = lines{j};
         %v = sscanf(line, '%d%*s%d%*s%d%*s%d%*s%d%*s%d%*s%d%*s%f');
-        v = sscanf(line, '%d%*s%f');
+        v = sscanf(line, '%d%*s%f%*s');
         for k = 1:length(states)
             state = states(k);
             if (v(1) == state)

@@ -2,21 +2,15 @@ package edu.stanford.cs229.agents;
 
 public class LearningParams {
   
-  public static boolean DEBUG = false;
+  public static int DEBUG = 0;
+  public static int EVAL_DEBUG = 0;
   
-  public static final boolean DUMP_QTABLE = true;
-  
-  public static final int NUM_TRAINING_ITERATIONS = 800;
+  public static final int NUM_TRAINING_ITERATIONS = 1800;
   
   public static final int NUM_EVAL_ITERATIONS = 4;
   
   public static final float EVAL_LEARNING_RATE = 0f;
-  public static final float EVAL_EXPLORATION_CHANCE = 0.0f;
-
-  public static final int OBSERVATION_SIZE = 5;
-  
-  public static final int MIN_MOVE_DISTANCE = 2;
-  public static final int MAX_NUM_STUCK_FRAMES = 25;
+  public static final float EVAL_EXPLORATION_CHANCE = 0.05f;
 
   // E-GREEDY Q-LEARNING SPECIFIC VARIABLES
   /**
@@ -44,19 +38,24 @@ public class LearningParams {
    * learningRate is not a final because it is customary that the exploration
    * chance changes as the training goes on.
    */
-  public static final float LEARNING_RATE = 0.9999f;
-  
+  public static final float LEARNING_RATE = 1f;
   public static final float BASE_LEARNING_RATE = 1 - LEARNING_RATE;
   
+  public static final int MIN_MOVE_DISTANCE = 2;
+  public static final int MAX_NUM_STUCK_FRAMES = 25;
+  
+  public static final int NUM_OBSERVATION_LEVELS = 3;
+  public static final int[] OBSERVATION_SIZES = {1, 3, 5};
+  public static final float[] ENEMIES_AROUND_REWARD_SCALER = {0f, 0f, 0.15f};
+  
   public static final class REWARD_PARAMS {
-    public static final int distance = 6;
-    public static final int elevation = 8;
-    public static final int collision = 0;
+    public static final int distance = 8;
+    public static final int elevation = 10;
+    public static final int collision = -800;
+    public static final int killedByFire = 80;
+    public static final int killedByStomp = 80;
+    public static final int stuck = -20;
     public static final int win = 0;
-    public static final int princes = 0;
-    public static final int killedByFire = 0;
-    public static final int killedByStomp = 0;
-    public static final int stuck = -10;
     
     public static final int mode = 0;
     public static final int coins = 0;
@@ -71,4 +70,14 @@ public class LearningParams {
   };
   
   public static final int TIME_PENALTY = 0;
+  
+  public static final boolean DUMP_INTERMEDIATE_QTABLE = false;
+
+  public static final boolean LOAD_QTABLE = false;
+  
+  public static final String QTABLE_NAME_FORMAT = "qt.%d.%d.txt";
+  
+  public static final String FINAL_QTABLE_NAME = "qt.final.txt";
+
+  public static final String SCORES_NAME = "scores.txt";
 }

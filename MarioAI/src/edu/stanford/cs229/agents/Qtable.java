@@ -1,12 +1,7 @@
 package edu.stanford.cs229.agents;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Adapted from http://www.itu.dk/courses/MAIG/E2011/Exercises/QLearning.java
@@ -23,7 +18,7 @@ public abstract class Qtable {
    * state number of each MarioState. Each state has an array of Q values for
    * all the actions available for that state.
    */
-  private Hashtable<Integer, float[]> table;
+  private Hashtable<Long, float[]> table;
 
   /**
    * the actionRange variable determines the number of actions available at any
@@ -66,7 +61,7 @@ public abstract class Qtable {
    * state of the world when the action resulting in the reward was made must be
    * stored.
    */
-  int prevState;
+  long prevState;
 
   /**
    * Since in Q-learning the updates to the Q values are made ONE STEP LATE, the
@@ -81,7 +76,7 @@ public abstract class Qtable {
    */
   Qtable(int actionRange) {
     randomGenerator = new Random();
-    table = new Hashtable<Integer, float[]>();
+    table = new Hashtable<Long, float[]>();
     this.actionRange = actionRange;
   }
 
@@ -93,7 +88,7 @@ public abstract class Qtable {
    *          current map (state)
    * @return the action to be taken by the calling progam
    */
-  public int getNextAction(int stateNumber) {
+  public int getNextAction(long stateNumber) {
     prevState = stateNumber;
     if (randomGenerator.nextFloat() < explorationChance) {
       prevAction = explore();
@@ -116,7 +111,7 @@ public abstract class Qtable {
    *          current map (state)
    * @return the action with the highest Q value
    */
-  abstract int getBestAction(int stateNumber);
+  abstract int getBestAction(long stateNumber);
 
   /**
    * The explore function is called for e-greedy algorithms. It can choose an
@@ -139,7 +134,7 @@ public abstract class Qtable {
    * @param reward The reward at the current state.
    * @param currentStateNumber The current state number.
    */
-  abstract void updateQvalue(int reward, int currentStateNumber);
+  abstract void updateQvalue(float reward, long currentStateNumber);
 
   /**
    * The getActionsQValues function returns an array of Q values for all the
@@ -150,7 +145,7 @@ public abstract class Qtable {
    * @param the current state
    * @return an array of Q values for all the actions available at given state.
    */
-  float[] getActionsQValues(int stateNumber) {
+  float[] getActionsQValues(long stateNumber) {
     if (!table.containsKey(stateNumber)) {
       float[] initialQvalues = getInitialQvalues(stateNumber);
       table.put(stateNumber, initialQvalues);
@@ -159,9 +154,9 @@ public abstract class Qtable {
     return table.get(stateNumber);
   }
   
-  abstract float[] getInitialQvalues(int stateNumber);
+  abstract float[] getInitialQvalues(long stateNumber);
   
-  Hashtable<Integer, float[]> getTable() {
+  Hashtable<Long, float[]> getTable() {
     return table;
   }
 };

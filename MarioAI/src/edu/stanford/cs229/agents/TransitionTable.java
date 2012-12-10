@@ -9,10 +9,10 @@ public class TransitionTable {
   public static class ActionData {
     private int actionCount = 0;
     
-    private Hashtable<Integer, Integer> transitions =
-        new Hashtable<Integer, Integer>();
+    private Hashtable<Long, Integer> transitions =
+        new Hashtable<Long, Integer>();
     
-    public float getProbability(int toState) {
+    public float getProbability(long toState) {
       if (!transitions.containsKey(toState)) {
         return DEFAULT_PROBABILITY;
       }
@@ -23,7 +23,11 @@ public class TransitionTable {
       return actionCount;
     }
     
-    public void addTransition(int toState) {
+    public void setActionCount(int count) {
+      actionCount = count;
+    }
+    
+    public void addTransition(long toState) {
       actionCount += 1;
       
       if (!transitions.containsKey(toState)) {
@@ -33,30 +37,47 @@ public class TransitionTable {
     }
   }
 
-  Hashtable<Integer, Hashtable<Integer, ActionData>> stateCounter =
-      new Hashtable<Integer, Hashtable<Integer, ActionData>>();
-
-  private Hashtable<Integer, ActionData> getState(int state) {
-    if (!stateCounter.containsKey(state)) {
-      stateCounter.put(state, new Hashtable<Integer, ActionData>());
-    }
-    return stateCounter.get(state);
-  }
+  Hashtable<Long, ActionData[]> stateCounter = new Hashtable<Long, ActionData[]>();
   
-  private ActionData getActionData(int fromState, int action) {
-    ActionData actionData = getState(fromState).get(action);
+  private final int actionRange;
+  
+  public TransitionTable(int actionRange) {
+    this.actionRange = actionRange;
+  }
+
+  private ActionData[] getState(long state) {
+    ActionData[] actionData = stateCounter.get(state);
     if (actionData == null) {
-      actionData = new ActionData();
-      getState(fromState).put(action, actionData);
+      actionData = new ActionData[actionRange];
+      for (int i = 0; i < actionRange; i++) {
+        actionData[i] = new ActionData();
+      }
+      stateCounter.put(state, actionData);
     }
     return actionData;
   }
   
-  public void addTransition(int fromState, int action, int toState) {
+  private ActionData getActionData(long fromState, int action) {
+    return getState(fromState)[action];
+  }
+  
+  public void addTransition(long fromState, int action, long toState) {
     getActionData(fromState, action).addTransition(toState);
   }
   
-  public int getCount(int fromState, int action) {
+  public int getCount(long fromState, int action) {
     return getActionData(fromState, action).getActionCount();
+  }
+  
+  public int[] getCounts(long state) {
+    int[] counts = new int[actionRange];
+    for (int i = 0; i < actionRange; i++) {
+      counts[i] = getActionData(state, i).getActionCount();
+    }
+    return counts;
+  }
+  
+  public void setCount(long fromState, int action, int count) {
+    getActionData(fromState, action).setActionCount(count);
   }
 }

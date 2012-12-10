@@ -1,68 +1,52 @@
 package edu.stanford.cs229.agents;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.Random;
 
 /* Stores and picks best action for mario advancing right
  * 
  * */
 public class ActionQtable extends Qtable {
 
-  TransitionTable transitions = new TransitionTable();
+  TransitionTable transitions;
 
   ActionQtable(int actionRange) {
     super(actionRange);
+    transitions = new TransitionTable(actionRange);
   }
 
   @Override
-  int getBestAction(int stateNumber) {
+  int getBestAction(long stateNumber) {
     float[] rewards = this.getActionsQValues(stateNumber);
     if (rewards == null) {
       System.err.println("No rewards defined for this state");
       return 0;
     } else {
-      // System.out.println("Rewards for this state");
-      // System.out.println(Arrays.toString(rewards));
       float maxRewards = Float.NEGATIVE_INFINITY;
       int indexMaxRewards = 0;
 
-      if (LearningParams.DEBUG) {
-        //System.out.print("Q values:");
-      }
+      Logger.print(4, "Q values: ");
+
       for (int i = 0; i < rewards.length; i++) {
-        //System.out.println(rewards[i]);
+        //Logger.println(3, rewards[i]);
         if (maxRewards < rewards[i]) {
           maxRewards = rewards[i];
           indexMaxRewards = i;
         }
-        if (LearningParams.DEBUG) {
-          if (i > 0) {
-            //System.out.print(", ");
-          }
-          //System.out.print(rewards[i]);
-        }
-      }
-      if (LearningParams.DEBUG) {
-        //System.out.println();
+
+        Logger.print(4, (i > 0 ? ", " : "") + rewards[i]);
       }
       
-      if (LearningParams.DEBUG) {
-        //System.out.println("Best action: " + indexMaxRewards);
-      }
-      //System.out.println(rewards.length);
+      Logger.println(4, "\nBest action: " + indexMaxRewards);
       return indexMaxRewards;
     }
   }
   
   @Override
-  void updateQvalue(int reward, int currentStateNumber) {
+  void updateQvalue(float reward, long currentStateNumber) {
     transitions.addTransition(prevState, prevAction, currentStateNumber);
     
     // Update Q values using the following update rule:
@@ -72,10 +56,10 @@ public class ActionQtable extends Qtable {
     //
     // where alpha = learningRate / # prevState/prevAction visited.
     
-    boolean shouldPrint = prevState == 1026 && prevAction == 2 && false;
+    boolean shouldPrint = prevState == 1026 && prevAction == 2;
     if (shouldPrint) {
-      System.out.println("++++++++++++++++++++++");
-      System.out.println(
+      Logger.println(3, "++++++++++++++++++++++");
+      Logger.println(3, 
           "current: " + currentStateNumber + " reward: " + reward);
     }
     
@@ -89,22 +73,20 @@ public class ActionQtable extends Qtable {
         LearningParams.BASE_LEARNING_RATE +
         learningRate / transitions.getCount(prevState, prevAction);
     
-    if (LearningParams.DEBUG) {
-      System.out.println(
-        "count: " + prevState + ", " + prevAction + " = " + transitions.getCount(prevState, prevAction));
-    }
+    Logger.println(4, "count: " + prevState + ", " + prevAction + " = " +
+        transitions.getCount(prevState, prevAction));
     
     float newQ = (1 - alpha) * prevQ +  alpha * (reward + gammaValue * maxQ);
     
     prevQs[prevAction] = newQ;
     
     if (shouldPrint) {
-      System.out.println("prevQ: " + prevQ + " maxQ: " + maxQ + " newQ: " + newQ);
+      Logger.println(3, "prevQ: " + prevQ + " maxQ: " + maxQ + " newQ: " + newQ);
     }
   }
   
   @Override
-  float[] getInitialQvalues(int stateNumber) {
+  float[] getInitialQvalues(long stateNumber) {
     float[] initialQvalues = new float[actionRange];
     for (int i = 0; i < actionRange; i++) {
       // Set as random float ranged (-.1, .1), check whether makes sense.
@@ -114,31 +96,54 @@ public class ActionQtable extends Qtable {
   }
 
   public void dumpQtable(String logfile) {
-    System.out.println("** Dumping Qtable to " + logfile + " **\n");
+    Logger.println(1, "** Dumping Qtable to " + logfile + " **");
     
     StringBuilder sb = new StringBuilder();
-    // Find the size of qtable.
-    for (int key : getTable().keySet()){
+    for (long key : getTable().keySet()){
       sb.append(printState(key));
+      sb.append("\n");
     }
-    
-    byte data[] = sb.toString().getBytes();
 
     try {
-      OutputStream out = new FileOutputStream(logfile);
-      out.write(data, 0, data.length);
+      BufferedWriter writer = new BufferedWriter(new FileWriter(logfile));
+      writer.write(sb.toString());
+      writer.close();
     } catch (IOException x) {
-      System.err.println(x);
+      System.err.println("Failed to write qtable to: " + logfile);
     }
   }
   
-  public String printState(int key) {
-    StringBuilder sb = new StringBuilder(
-        String.format("%6d %s:", key, MarioState.printStateNumber(key)));
-    for (float v : getTable().get(key)) {
-      sb.append(String.format(" %.4f", v));
+  public String printState(long key) {
+    return String.format(
+        "%d:%s:%s",
+        key,
+        Utils.join(getTable().get(key), " "),
+        Utils.join(transitions.getCounts(key), " "));
+  }
+  
+  private void parseState(String line) {
+    String[] tokens = line.split(":");
+    long state = Long.valueOf(tokens[0]);
+    String[] qvalueStrings = tokens[1].split(" ");
+    String[] countStrings = tokens[2].split(" ");
+    float[] qvalues = getActionsQValues(state);
+    for (int i = 0; i < actionRange; i++) {
+      qvalues[i] = Float.valueOf(qvalueStrings[i]);
+      transitions.setCount(state, i, Integer.valueOf(countStrings[i]));
     }
-    sb.append("\n");
-    return sb.toString();
+  }
+  
+  public void loadQtable(String logfile) {
+    Logger.println(1, "** Loading Qtable from " + logfile + " **");
+    try {
+      BufferedReader reader = new BufferedReader(new FileReader(logfile));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        parseState(line);
+      }
+      reader.close();
+    } catch (Exception e) {
+      System.err.println("Failed to load qtable from: " + logfile);
+    }
   }
 }

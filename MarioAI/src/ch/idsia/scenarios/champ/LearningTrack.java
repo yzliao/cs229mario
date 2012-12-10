@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Date;
 
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
@@ -59,6 +60,7 @@ public final class LearningTrack {
 
   private static int evaluateSubmission(
       MarioAIOptions marioAIOptions, LearningAgent learningAgent) {
+ 
     // Provides the level.
     LearningTask learningTask = new LearningTask(marioAIOptions);
     // Limits the number of evaluations per run for LearningAgent.
@@ -67,14 +69,23 @@ public final class LearningTrack {
     // LearningTask.evaluate(Agent).
     learningAgent.setLearningTask(learningTask);
     learningAgent.init();
+    
     // Launches the training process. numberOfTrials happen here.
+    //marioAIOptions.setEnemies("off");
+    //marioAIOptions.setMarioInvulnerable(true);
+    marioAIOptions.setMarioMode(0);
     learningAgent.learn();
+    //marioAIOptions.setLevelRandSeed((int)(new Date().getTime() / 1000));
+    marioAIOptions.setMarioMode(1);
+    learningAgent.learn();
+    //marioAIOptions.setMarioMode(2);
+   // learningAgent.learn();
 
     Agent agent = learningAgent.getBestAgent(); // this agent will be evaluated
+    System.out.println("LearningTrack best agent = " + agent);
 
     // Perform the gameplay task on the same level.
     marioAIOptions.setVisualization(true);
-    System.out.println("LearningTrack best agent = " + agent);
     marioAIOptions.setAgent(agent);
     
     // Set to a different seed for eval.
@@ -117,7 +128,6 @@ public final class LearningTrack {
   public static void main(String[] args) {
     // set up parameters
     MarioAIOptions marioAIOptions = new MarioAIOptions(args);
-    marioAIOptions.setEnemies("off");
     // read agent from commadline
     LearningAgent learningAgent = (LearningAgent) marioAIOptions.getAgent();
     System.out.println("main.learningAgent = " + learningAgent);

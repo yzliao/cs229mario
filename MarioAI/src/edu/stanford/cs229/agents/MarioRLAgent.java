@@ -37,70 +37,70 @@
 
 package edu.stanford.cs229.agents;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
-import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.mario.environments.Environment;
 import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
 
 public class MarioRLAgent implements LearningAgent {
 
-  // Evaluation task and quota
-  LearningTask learningTask;
+  private String name;
   
-  int learningQuota;
+  // Evaluation task and quota
+  private LearningTask learningTask;
+  private int learningQuota;
   
   // Fields for the Mario Agent
-  public MarioState currentState;
+  private MarioState currentState;
 
   // Associated Qtable for the agent. Used for RL training.
-  public ActionQtable actionTable;
-
-  // Number of nearby enemies in previous tick
-  int prevNearEnemies;
+  private ActionQtable actionTable;
 
   // The type of phase the Agent is in.
   // INIT: initial phase
   // LEARN: accumulatively update the Qtable
-  enum Phase {
+  private enum Phase {
     INIT, LEARN, EVAL
   };
-
-  Phase currentPhase = Phase.INIT;
-
-  public String name;
-
-  // Constructor
+  private Phase currentPhase = Phase.INIT;
+  
+  private int learningTrial = 0;
+  
+  private List<Integer> scores =
+      new ArrayList<Integer>(LearningParams.NUM_TRAINING_ITERATIONS);
+  
   public MarioRLAgent() {
     setName("Super Mario 229");
     
     currentState = new MarioState();
     actionTable = new ActionQtable(MarioAction.TOTAL_ACTIONS);
-    System.out.println("*************************************************");
-    System.out.println("*                                               *");
-    System.out.println("*                 Agent created!                *");
-    System.out.println("*                                               *");
-    System.out.println("*************************************************");
+    
+    if (LearningParams.LOAD_QTABLE) {
+      actionTable.loadQtable(LearningParams.FINAL_QTABLE_NAME);
+    }
+    
+    Logger.println(0, "*************************************************");
+    Logger.println(0, "*                                               *");
+    Logger.println(0, "*                Super Mario 229                *");
+    Logger.println(0, "*                 Agent created!                *");
+    Logger.println(0, "*                                               *");
+    Logger.println(0, "*************************************************");
   }
   
   @Override
   public boolean[] getAction() {
     // Transforms the best action number to action array.
     int actionNumber = actionTable.getNextAction(currentState.getStateNumber());
-    if (LearningParams.DEBUG) {
-      System.out.println("Next action: " + actionNumber + "\n");
-    }
-    boolean[] action = MarioAction.getAction(actionNumber);
-    /*if (!currentState.canJump()) {
-      action[Mario.KEY_JUMP] = false;
-    }*/
     
-    return action;
+    Logger.println(2, "Next action: " + actionNumber + "\n");
+    
+    return MarioAction.getAction(actionNumber);
   }
 
   /**
@@ -116,7 +116,7 @@ public class MarioRLAgent implements LearningAgent {
   public void integrateObservation(Environment environment) {
     if (currentPhase == Phase.INIT && environment.isMarioOnGround()) {
       // Start learning after Mario lands on the ground.
-      System.out.println("============== Learning Phase =============");
+      Logger.println(1, "============== Learning Phase =============");
       currentPhase = Phase.LEARN;
       currentState.update(environment);
     } else {
@@ -131,65 +131,68 @@ public class MarioRLAgent implements LearningAgent {
 
   @Override
   public void learn() {
-    System.out.println(learningQuota + " is the learning quota.");
-    int numIterationsToTrain =
-        Math.min(LearningParams.NUM_TRAINING_ITERATIONS, learningQuota);
-    
-    String logfile = "LearningScores.txt";
-    StringBuilder sb = new StringBuilder();
-    
-    for (int i = 0; i < numIterationsToTrain; ++i) {
-      System.out.println("==============================================");
-      System.out.println("Trial: " + i);
+    for (int i = 0; i < learningQuota; ++i) {
+      Logger.println(1, "================================================");
+      Logger.println(0, "Trial: %d.%d", learningTrial, i);
 
       learningTask.runSingleEpisode(1);
 
       EvaluationInfo evaluationInfo =
           learningTask.getEnvironment().getEvaluationInfo();
       
-      int f = evaluationInfo.computeWeightedFitness();
-      System.out.println(
-          "Intermediate SCORE = " + f + "\n" +
-          "Details: " + evaluationInfo.toStringSingleLine());
+      int score = evaluationInfo.computeWeightedFitness();
+      Logger.println(1, "Intermediate SCORE = " + score);
+      Logger.println(1, evaluationInfo.toStringSingleLine());
       
-      sb.append(String.format("%d\n", f));
+      scores.add(score);
 
       // Dump the info of the most visited states into file.
-      if (LearningParams.DUMP_QTABLE) {
-        actionTable.dumpQtable("qt." + i + ".txt");
+      if (LearningParams.DUMP_INTERMEDIATE_QTABLE) {
+        actionTable.dumpQtable(
+            String.format(LearningParams.QTABLE_NAME_FORMAT, learningTrial, i));
       }
-      //actionTable.dumpQtableTopStates("qt.top." + i + ".txt", 8);
     }
-    
-    // Entering EVAL phase.
-    System.out.println("============== EVAL PHASE =============");
-    currentPhase = Phase.EVAL;
-    
-    actionTable.dumpQtable("qt.final.txt");
 
-    // Save scores to file.
-    byte data[] = sb.toString().getBytes();
-    try {
-      OutputStream out = new FileOutputStream(logfile);
-      out.write(data, 0, data.length);
-    } catch (IOException x) {
-      System.err.println(x);
-    }
-    
-    // Set learning and exploration chance for evaluations.
-    actionTable.learningRate = LearningParams.EVAL_LEARNING_RATE;
-    actionTable.explorationChance = LearningParams.EVAL_EXPLORATION_CHANCE;
-
-    //LearningParams.DEBUG = true;
+    learningTrial++;
   }
   
   @Override
   public void reset() {
     if (currentPhase != Phase.EVAL) {
-      System.out.println("=================== Init =================");
+      Logger.println(1, "=================== Init =================");
       currentPhase = Phase.INIT;
     }
     currentState = new MarioState();
+  }
+  
+  private void setUpForEval() {
+    Logger.println(1, "=========== Dumping Results ===========");
+    // Dump final Qtable.
+    actionTable.dumpQtable(LearningParams.FINAL_QTABLE_NAME);
+    // Dump training scores.
+    dumpScores(LearningParams.SCORES_NAME);
+    
+    // Entering EVAL phase.
+    Logger.println(1, "============== Eval Phase =============");
+    currentPhase = Phase.EVAL;
+    LearningParams.DEBUG = LearningParams.EVAL_DEBUG;
+
+    // Set learning and exploration chance for evaluations.
+    actionTable.learningRate = LearningParams.EVAL_LEARNING_RATE;
+    actionTable.explorationChance = LearningParams.EVAL_EXPLORATION_CHANCE;
+    
+    //LearningParams.DEBUG = 2;
+  }
+  
+  private void dumpScores(String logfile) {
+    Logger.println(1, "** Dumping scores to " + logfile + " **");
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(logfile));
+      writer.write(Utils.join(scores.toArray(), "\n"));
+      writer.close();
+    } catch (Exception x) {
+      System.err.println("Failed to write scores.");
+    }
   }
 
   /**
@@ -201,7 +204,7 @@ public class MarioRLAgent implements LearningAgent {
   }
 
   /**
-   * Defines the max number of trials to learn. Currently it is 100000.
+   * Defines the max number of trials to learn..
    */
   @Override
   public void setEvaluationQuota(long num) {
@@ -210,6 +213,7 @@ public class MarioRLAgent implements LearningAgent {
 
   @Override
   public Agent getBestAgent() {
+    setUpForEval();
     return this;
   }
   

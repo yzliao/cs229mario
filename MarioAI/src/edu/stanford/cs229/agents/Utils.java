@@ -24,4 +24,37 @@ public class Utils {
     }
     return sb.reverse().toString();
   }
+  
+  public static String join(Object[] items, String separator) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < items.length; i++) {
+      if (i > 0) {
+        sb.append(separator);
+      }
+      sb.append(items[i].toString());
+    }
+    return sb.toString();
+  }
+  
+  public static String join(float[] items, String separator) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < items.length; i++) {
+      if (i > 0) {
+        sb.append(separator);
+      }
+      sb.append(String.format("%.6f", items[i]));
+    }
+    return sb.toString();
+  }
+  
+  public static String join(int[] items, String separator) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < items.length; i++) {
+      if (i > 0) {
+        sb.append(separator);
+      }
+      sb.append(String.format("%d", items[i]));
+    }
+    return sb.toString();
+  }
 }

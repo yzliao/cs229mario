@@ -120,7 +120,7 @@ public int computeWeightedFitness(SystemOfValues sov)
                     killsByStomp * sov.killedByStomp +
                     killsByFire * sov.killedByFire +
                     killsByShell * sov.killedByShell +
-                    timeLeft * sov.timeLeft;
+                    marioStatus * timeLeft * sov.timeLeft;
 }
 
 public int computeWeightedFitness()

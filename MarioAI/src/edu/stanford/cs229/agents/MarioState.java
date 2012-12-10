@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.idsia.benchmark.mario.engine.GeneralizerLevelScene;
-import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.mario.engine.sprites.Sprite;
 import ch.idsia.benchmark.mario.environments.Environment;
 
@@ -21,9 +20,8 @@ public class MarioState {
 
   // 0-small, 1-big, 2-fire.
   private Int marioMode = new Int("m", 2);
-  private int lastMode = 2;
   
-  private Int marioDirection = new Int("Dir", 7);
+  private Int marioDirection = new Int("Dir", 8);
   private float marioX = 0;
   private float marioY = 0;
   
@@ -35,10 +33,15 @@ public class MarioState {
 
   private Int collisionsWithCreatures = new Int("C", 1);
   private int lastCollisionsWithCreatures = 0;
+
+  private BitArray[] enemies =
+      new BitArray[LearningParams.NUM_OBSERVATION_LEVELS];
   
-  private BitArray enemies = new BitArray("e", 6);
-  private int enemiesCount = 0;
-  private int lastEnemiesCount = 0;
+  // To keep track enemies killed in the observation window.
+  private int[] enemiesCount = new int[LearningParams.NUM_OBSERVATION_LEVELS];
+
+  private int totalEnemiesCount = 0;
+  private int lastTotalEnemiesCount = 0;
   
   // Whether enemies are killed in this frame.
   private Int enemiesKilledByStomp = new Int("ks", 1);
@@ -59,9 +62,9 @@ public class MarioState {
   //  0 | 1
   //BitArray gaps = new BitArray(2);
   
-  private Int win = new Int("W", 1);
+  //private Int win = new Int("W", 1);
   
-  private int stateNumber = 0;
+  private long stateNumber = 0;
   private Environment environment;
   private byte[][] scene;
 
@@ -69,6 +72,12 @@ public class MarioState {
   private int dElevation = 0;
   private int lastElevation = 0;
   private int lastDistance = 0;
+  
+  public MarioState() {
+    for (int i = 0; i < LearningParams.NUM_OBSERVATION_LEVELS; i++) {
+      enemies[i] = new BitArray("e" + i, Region.NUM_REGIONS);
+    }
+  }
   
   /**
    * Updates the state with the given Environment.
@@ -127,28 +136,46 @@ public class MarioState {
     
     // Fill enemy info.
     ///*
-    enemiesCount = 0;
-    enemies.reset();
-    int start = MARIO_X - LearningParams.OBSERVATION_SIZE / 2;
-    int end = MARIO_X + LearningParams.OBSERVATION_SIZE / 2 + 1;
-    for (int y = 0; y < scene.length; y++) {
-      for (int x = 0; x < scene.length; x++) {
+    int maxSize = LearningParams.OBSERVATION_SIZES[enemies.length - 1];
+    int startX = MARIO_X - maxSize;
+    int endX = MARIO_X + maxSize;
+    int startY = MARIO_Y - maxSize - getMarioHeight() + 1;
+    int endY = MARIO_Y + maxSize;
+    
+    totalEnemiesCount = 0;
+    for (int i = 0; i < enemiesCount.length; i++) {
+      enemiesCount[i] = 0;
+    }
+    
+    for (int i = 0; i < enemies.length; i++) {
+      enemies[i].reset();
+    }
+    for (int y = startY; y <= endY; y++) {
+      for (int x = startX; x <= endX; x++) {
         if (scene[y][x] == Sprite.KIND_GOOMBA ||
             scene[y][x] == Sprite.KIND_SPIKY) {
-          if (x >= start && x < end && y >= start && y < end) {
-            enemies.value[getRegion(x, y)] = true;
-            enemiesCount += 1;
+          int i = getObservationLevel(x, y);
+          if (i < 0) {
+            continue;
           }
+          enemies[i].value[getRegion(x, y)] = true;
+          enemiesCount[i]++;
+          totalEnemiesCount++;
         }
       }
     }
     
     // Fill killed info.
-    if (enemiesCount < lastEnemiesCount) {
+    enemiesKilledByStomp.value = environment.getKillsByStomp() - killsByStomp;
+    
+    // Only count killed by fire within our observation range.
+    if (totalEnemiesCount < lastTotalEnemiesCount) {
       enemiesKilledByFire.value = environment.getKillsByFire() - killsByFire;
-      enemiesKilledByStomp.value = environment.getKillsByStomp() - killsByStomp;
+    } else {
+      enemiesKilledByFire.value = 0;
     }
-    lastEnemiesCount = 0;
+    
+    lastTotalEnemiesCount = totalEnemiesCount;
     killsByFire = environment.getKillsByFire();
     killsByStomp = environment.getKillsByStomp();
     //*/
@@ -168,39 +195,38 @@ public class MarioState {
     }*/
     
     // Win?
-    win.value = environment.getMarioStatus() == Mario.STATUS_WIN ? 1 : 0;
+    //win.value = environment.getMarioStatus() == Mario.STATUS_WIN ? 1 : 0;
     
     this.computeStateNumber();
     
-    if (LearningParams.DEBUG) {
-      System.out.println(this);
-    }
+    Logger.println(2, this);
   }
   
-  public int calculateReward() {
-    int reward =
-        (marioMode.value - lastMode) * LearningParams.REWARD_PARAMS.mode +
+  public float calculateReward() {
+    float rewardScaler = 1f;
+    for (int i = 0; i < enemiesCount.length; i++) {
+      if (enemiesCount[i] > 0) {
+        rewardScaler = LearningParams.ENEMIES_AROUND_REWARD_SCALER[i];
+        break;
+      }
+    }
+    
+    float reward = 
+        // Penalty to help Mario get out of stuck.
         stuck.value * LearningParams.REWARD_PARAMS.stuck +
-        collisionsWithCreatures.value * LearningParams.REWARD_PARAMS.collision +
         // Reward for making forward and upward progress.
-        dDistance * LearningParams.REWARD_PARAMS.distance +
-        dElevation * LearningParams.REWARD_PARAMS.elevation +
-        // Give reward for enemy kills.
+        rewardScaler * dDistance * LearningParams.REWARD_PARAMS.distance +
+        rewardScaler * dElevation * LearningParams.REWARD_PARAMS.elevation +
+        // Reward for killing/avoiding enemies.
+        collisionsWithCreatures.value * LearningParams.REWARD_PARAMS.collision +
         enemiesKilledByFire.value * LearningParams.REWARD_PARAMS.killedByFire +
-        enemiesKilledByStomp.value * LearningParams.REWARD_PARAMS.killedByStomp +
-        // Give reward for Princes and winning.
-        //princes.value * LearningParams.REWARD_PARAMS.princes +
-        win.value * LearningParams.REWARD_PARAMS.win;
+        enemiesKilledByStomp.value * LearningParams.REWARD_PARAMS.killedByStomp;
     
     reward -= LearningParams.TIME_PENALTY;
     
-    if (LearningParams.DEBUG) {
-      System.out.println("D: " + dDistance);
-      System.out.println("H:" + dElevation);
-      System.out.println("Reward = " + reward);
-    }
-    
-    lastMode = marioMode.value;
+    Logger.println(2, "D: " + dDistance);
+    Logger.println(2, "H:" + dElevation);
+    Logger.println(2, "Reward = " + reward);
     
     return reward;
   }
@@ -212,7 +238,7 @@ public class MarioState {
   /**
    * Returns a unique number to identify each different state.
    */
-  public int getStateNumber() {
+  public long getStateNumber() {
     return stateNumber;
   }
   
@@ -222,6 +248,10 @@ public class MarioState {
     for (Field field : fields) {
       stateNumber += field.getInt() << i;
       i += field.getNBits();
+    }
+    if (i >= Long.SIZE) {
+      System.err.println("State number too large!! = " + i + "bits!!");
+      System.exit(1);
     }
   }
   
@@ -240,7 +270,7 @@ public class MarioState {
     return sb.toString();
   }
   
-  public static String printStateNumber(int state) {
+  public static String printStateNumber(long state) {
     StringBuilder sb = new StringBuilder("[]");
     /*int n = 0;
     for (Field field : FIELDS) {
@@ -252,22 +282,39 @@ public class MarioState {
     }*/
     return sb.toString();
   }
+  
+  private int getMarioHeight() {
+    return marioMode.value > 0 ? 2 : 1;
+  }
+  
+  private int getObservationLevel(int x, int y) {
+    for (int i = 0; i < LearningParams.OBSERVATION_SIZES.length; i++) {
+      int size = LearningParams.OBSERVATION_SIZES[i];
+      int dy = y >= MARIO_Y
+          ? (y - MARIO_Y) : (MARIO_Y - getMarioHeight() - y + 1);
+      if (Math.abs(x - MARIO_X) <= size && dy <= size) {
+        return i;
+      }
+    }
+    System.err.println("Bad observation level!! " + x + " " + y);
+    return -1;
+  }
 
   private int getRegion(int x, int y) {
-    if (x < 9) {
+    if (x < MARIO_X) {
       return Region.BEHIND;
-    } else if (x == 9) {
-      if (y < 9) {
+    } else if (x == MARIO_X) {
+      if (y < MARIO_Y) {
         return Region.ABOVE;
       } else {
         return Region.BELOW;
       }
-    } else if (y == 9 || (marioMode.value > 0 && y == 10)) {
-      return Region.FRONT;
-    } else if (y > 9) {
-      return Region.FRONT_ABOVE;
-    } else {
+    } else if (y < MARIO_Y) {
       return Region.FRONT_BELOW;
+    } else if (y >= MARIO_Y && y <= MARIO_Y + getMarioHeight()) {
+      return Region.FRONT;
+    } else {
+      return Region.FRONT_ABOVE;
     }
   }
   
@@ -282,10 +329,6 @@ public class MarioState {
       }
     }
     return -1;
-  }
-  
-  private boolean isPrinces(int x, int y) {
-    return scene[y][x] == GeneralizerLevelScene.PRINCESS;
   }
   
   private boolean isObstacle(int x, int y) {
@@ -364,6 +407,8 @@ public class MarioState {
     public static final int FRONT_BELOW = 3;
     public static final int BELOW = 4;
     public static final int BEHIND = 5;
+    
+    public static final int NUM_REGIONS = 6;
   }
   
   public abstract class Field {
@@ -447,12 +492,13 @@ public class MarioState {
   
   public static void main(String[] argv) {
     MarioState state = new MarioState();
-    state.marioMode.value = 2;
+    state.marioMode.value = 0;
     state.canJump.value = 1;
     state.onGround.value = 1;
+    state.stuck.value = 1;
     state.obstacles.value[0] = true;
     state.obstacles.value[1] = true;
-    state.obstacles.value[2] = true;
+    state.obstacles.value[2] = false;
     state.computeStateNumber();
     System.out.println(state.getStateNumber());
   }
