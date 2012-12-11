@@ -1,9 +1,6 @@
 package edu.stanford.cs229.agents;
 
-import java.util.Date;
-
-import ch.idsia.agents.Agent;
-import ch.idsia.agents.LearningAgent;
+import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.tasks.BasicTask;
 import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
@@ -16,49 +13,68 @@ import ch.idsia.tools.MarioAIOptions;
  */
 public class Evaluation {
   
-  private MarioAIOptions marioAIOptions;
-  private LearningTask learningTask;
-  private LearningAgent learningAgent;
-  
-  public Evaluation(
-      MarioAIOptions marioAIOptions, LearningAgent learningAgent) {
-    this.marioAIOptions = marioAIOptions;
-    this.learningAgent = learningAgent;
-    this.learningTask = new LearningTask(marioAIOptions);
-
-    learningAgent.setLearningTask(learningTask);
-    learningAgent.init();
+  public static enum Mode {
+    DEBUG,
+    DEMO,
+    EVAL;
     
-    train();
-  }
-  
-  private void train() {
-    //marioAIOptions.setEnemies("off");
-
-    learningAgent.setEvaluationQuota(
-        LearningParams.NUM_TRAINING_ITERATIONS /
-        LearningParams.NUM_MODES_TO_TRAIN / LearningParams.NUM_SEEDS_TO_TRAIN);
-
-    for (int i = 0; i < LearningParams.NUM_MODES_TO_TRAIN; i++) {
-      marioAIOptions.setMarioMode(i);
-      learningAgent.learn();
-      for (int j = 1; j < LearningParams.NUM_SEEDS_TO_TRAIN; j++) {
-        marioAIOptions.setLevelRandSeed(getSeed());
-        learningAgent.learn();
+    static Mode getMode(String mode) {
+      for (Mode m : Mode.values()) {
+        if (m.name().equalsIgnoreCase(mode)) {
+          return m;
+        }
       }
+      return Mode.DEMO;
     }
   }
-
-  public int getSeed() {
-    return (int)(new Date().getTime() / 1000);
+  
+  private Mode mode;
+  
+  private MarioAIOptions marioAIOptions;
+  private MarioRLAgent agent;
+  
+  private float averageScore = 0;
+  private float wins = 0;
+  private float averageKills = 0;
+  private float averageDistance = 0;
+  private float averageTimeSpent = 0;
+  
+  public Evaluation(Mode mode) {
+    this.mode = mode;
+    
+    agent = new MarioRLAgent();
+    
+    marioAIOptions = new MarioAIOptions();
+    marioAIOptions.setAgent(agent);
+    marioAIOptions.setVisualization(false);
+    marioAIOptions.setFPS(24);
+    
+    agent.setOptions(marioAIOptions);
+    agent.setLearningTask(new LearningTask(marioAIOptions));
+  }
+  
+  private void reset() {
+    averageScore = 0;
+    wins = 0;
+    averageKills = 0;
+    averageDistance = 0;
+    averageTimeSpent = 0;
   }
 
-  public float evaluate() {
-    Agent agent = learningAgent.getBestAgent();
-
-    marioAIOptions.setVisualization(true);
-    marioAIOptions.setAgent(agent);
+  public float evaluate(String dumpFilename) {
+    if (mode == Mode.DEBUG) {
+      marioAIOptions.setVisualization(true);
+      LearningParams.DEBUG = 2;
+    }
     
+    reset();
+    
+    agent.learn();
+
+    if (mode == Mode.DEMO) {
+      marioAIOptions.setVisualization(true);
+    }
+
     BasicTask basicTask = new BasicTask(marioAIOptions);
     
     Logger.println(0, "*************************************************");
@@ -70,44 +86,107 @@ public class Evaluation {
     System.out.println("Task = " + basicTask);
     System.out.println("Agent = " + agent);
 
-    int averageScore = 0;
     for (int i = 0; i < LearningParams.NUM_EVAL_ITERATIONS; i++) {
       // Set to a different seed for evaluation.
       if (LearningParams.USE_DIFFERENT_SEED_FOR_EVAL) {
-        marioAIOptions.setLevelRandSeed(getSeed());
-        //basicTask.setOptionsAndReset(marioAIOptions);
+        marioAIOptions.setLevelRandSeed(Utils.getSeed());
       }
          
       // Make evaluation on the same episode once.
-      if (!basicTask.runSingleEpisode(1)) {
-        System.err.println("MarioAI: out of computational time per action!");
-        System.exit(0);
+      int failedCount = 0;
+      while (!basicTask.runSingleEpisode(1)) {
+        System.err.println("MarioAI: out of computational time per action?");
+        failedCount++;
+        if (failedCount >= 3) {
+          System.err.println("Exiting.. =(");
+          System.exit(0);
+        }
       }
 
       EvaluationInfo evaluationInfo = basicTask.getEvaluationInfo();
-      int score = evaluationInfo.computeWeightedFitness();
+      accumulateEvalInfo(evaluationInfo);
 
-      System.out.println("Intermediate SCORE = " + score + ";");
-      System.out.println("Details: " + evaluationInfo.toString());
-      
-      averageScore += score;
+      System.out.println(evaluationInfo.toString());
     }
     
-    averageScore =
-        (int)((1.0 * averageScore) / LearningParams.NUM_EVAL_ITERATIONS);
-    System.out.println("Average: " + averageScore);
-
+    computeFinalEvalInfo(dumpFilename);
     return averageScore;
   }
   
-  public static void main(String[] args) {
-    MarioAIOptions marioAIOptions = new MarioAIOptions(args);
-    LearningAgent learningAgent = (LearningAgent) marioAIOptions.getAgent();
-    System.out.println("Learning Agent = " + learningAgent);
-
-    float finalScore = new Evaluation(marioAIOptions, learningAgent).evaluate();
+  private void computeFinalEvalInfo(String dumpFilename) {
+    averageScore /= LearningParams.NUM_EVAL_ITERATIONS;
+    wins /= LearningParams.NUM_EVAL_ITERATIONS;
+    averageKills /= LearningParams.NUM_EVAL_ITERATIONS;
+    averageDistance /= LearningParams.NUM_EVAL_ITERATIONS;
+    averageTimeSpent /= LearningParams.NUM_EVAL_ITERATIONS;
     
-    System.out.println("Final Score = " + finalScore);
+    Utils.dump(dumpFilename, String.format("%f\n%f\n%f\n%f\n%f",
+        averageScore, wins, averageKills, averageDistance, averageTimeSpent));
+  }
+  
+  private void accumulateEvalInfo(EvaluationInfo evaluationInfo) {
+    averageScore += evaluationInfo.computeWeightedFitness();
+    wins += evaluationInfo.marioStatus == Mario.STATUS_WIN ? 1 : 0;
+    averageKills += 1.0 *
+        evaluationInfo.killsTotal / evaluationInfo.totalNumberOfCreatures;
+    averageDistance += 1.0 *
+        evaluationInfo.distancePassedCells / evaluationInfo.levelLength;
+    averageTimeSpent += evaluationInfo.timeSpent;
+  }
+  
+  public static String getParam(String[] args, String name) {
+    for (int i = 0; i < args.length; i++) {
+      String s = args[i];
+      if (s.startsWith("-") && s.substring(1).equals(name)) {
+        if (i + 1 < args.length) {
+          String v = args[i + 1];
+          if (!v.startsWith("-")) {
+            return v;
+          }
+        }
+        return "";
+      }
+    }
+    return null;
+  }
+  
+  public static boolean isNullOrEmpty(String v) {
+    return v == null || v.isEmpty();
+  }
+  
+  public static int getIntParam(String[] args, String name, int defaultValue) {
+    String v = getParam(args, name);
+    return isNullOrEmpty(v) ? defaultValue : Integer.valueOf(v);
+  }
+  
+  public static boolean getBooleanParam(String[] args, String name) {
+    String v = getParam(args, name);
+    return v != null;
+  }
+
+  public static void main(String[] args) {
+    Mode mode = Mode.getMode(getParam(args, "m"));
+    int numRounds = getIntParam(args, "n", 1);
+
+    LearningParams.NUM_MODES_TO_TRAIN =
+        getIntParam(args, "nm", LearningParams.NUM_MODES_TO_TRAIN);
+    LearningParams.NUM_SEEDS_TO_TRAIN =
+        getIntParam(args, "ns", LearningParams.NUM_SEEDS_TO_TRAIN);
+    LearningParams.NUM_TRAINING_ITERATIONS =
+        getIntParam(args, "i", LearningParams.NUM_TRAINING_ITERATIONS);
+    LearningParams.NUM_EVAL_ITERATIONS =
+        getIntParam(args, "ei", LearningParams.NUM_EVAL_ITERATIONS);
+    
+    LearningParams.LOAD_QTABLE = getBooleanParam(args, "l");
+    
+    Evaluation eval = new Evaluation(mode);
+
+    for (int i = 0; i < numRounds; i++) {
+      System.out.println("~ Round " + i + " ~");
+      float finalScore = eval.evaluate(String.format("eval.%d.txt", i));
+      System.out.println("Final Score = " + finalScore + "\n");
+    }
+
     System.exit(0);
   }
 }

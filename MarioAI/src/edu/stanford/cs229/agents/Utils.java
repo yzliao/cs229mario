@@ -1,5 +1,8 @@
 package edu.stanford.cs229.agents;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -8,6 +11,10 @@ import java.util.List;
  * @author zheyang@stanford.edu (Zhe Yang)
  */
 public class Utils {
+  
+  public static int getSeed() {
+    return (int)(new Date().getTime() / 1000);
+  }
 
   public static boolean getBit(int number, int i) {
     return (number & (1 << i)) != 0;
@@ -63,5 +70,18 @@ public class Utils {
       sb.append(String.format("%d", items[i]));
     }
     return sb.toString();
+  }
+  
+  public static boolean dump(String filename, String content) {
+    Logger.println(1, "** Dumping to " + filename + " **");
+    try {
+      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+      writer.write(content);
+      writer.close();
+      return true;
+    } catch (Exception x) {
+      System.err.println("Failed to write scores.");
+    }
+    return false;
   }
 }

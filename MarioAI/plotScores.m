@@ -1,7 +1,7 @@
 % Parse and plot the scored from the learning iterations.
 function plotScores(filename, numIter)
 
-N = round(numIter / 20);
+N = 25;
 ind = N : numIter - N;
 
 scores = zeros(numIter, 1);
