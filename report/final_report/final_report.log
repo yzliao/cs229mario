@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2012.3.3)  11 DEC 2012 20:38
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2012.3.3)  12 DEC 2012 01:40
 entering extended mode
-**C:/Users/Bobo/cs229mario/report/final_report/final_report.tex
-(C:/Users/Bobo/cs229mario/report/final_report/final_report.tex
+**final_report.tex
+(C:\Users\Bobo\cs229mario\report\final_report\final_report.tex
 LaTeX2e <2009/09/24>
 Babel <v3.8l> and hyphenation patterns for english, afrikaans, ancientgreek, ar
 abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
@@ -276,58 +276,26 @@ Non-PDF special ignored!{C:/Users/Bobo/AppData/Local/MiKTeX/2.9/pdftex/config/p
 dftex.map}
 
 
-] <mario_scene.png, id=15, 492.33937pt x 387.69844pt>
-File: mario_scene.png Graphic file (type png)
+] <figs/mario_scene.png, id=15, 492.33937pt x 387.69844pt>
+File: figs/mario_scene.png Graphic file (type png)
 
-<use mario_scene.png>
-Package pdftex.def Info: mario_scene.png used on input line 155.
+<use figs/mario_scene.png>
+Package pdftex.def Info: figs/mario_scene.png used on input line 155.
 (pdftex.def)             Requested size: 252.94499pt x 199.18478pt.
 LaTeX Font Info:    Try loading font information for OMS+ptm on input line 159.
 
- ("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\omsptm.fd"
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\omsptm.fd"
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 159.
- (C:\Users\Bobo\cs229mario\report\final_report\final_report.bbl)
 
-** Conference Paper **
-Before submitting the final camera ready copy, remember to:
 
- 1. Manually equalize the lengths of two columns on the last page
- of your paper;
+! LaTeX Error: File `figs/score_figure' not found.
 
- 2. Ensure that any PostScript and/or PDF output post-processing
- uses only Type 1 fonts and that every step in the generation
- process uses the appropriate paper size.
-
-[2 <C:/Users/Bobo/cs229mario/report/final_report/mario_scene.png>]
-(C:\Users\Bobo\cs229mario\report\final_report\final_report.aux)
-
-LaTeX Warning: There were undefined references.
-
- ) 
-Here is how much of TeX's memory you used:
- 3755 strings out of 494049
- 55083 string characters out of 3146069
- 119124 words of memory out of 3000000
- 7025 multiletter control sequences out of 15000+200000
- 36949 words of font info for 72 fonts, out of 3000000 for 9000
- 715 hyphenation exceptions out of 8191
- 27i,14n,32p,989b,219s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Program File
-s/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKTeX
- 2.9/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Program Files/MiKTeX 2.9/font
-s/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/p
-ublic/amsfonts/cm/cmr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/ams
-fonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
-msy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/times/utmb8a.pfb><C:/Pro
-gram Files/MiKTeX 2.9/fonts/type1/urw/times/utmbi8a.pfb><C:/Program Files/MiKTe
-X 2.9/fonts/type1/urw/times/utmr8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
-/urw/times/utmri8a.pfb>
-Output written on final_report.pdf (2 pages, 647623 bytes).
-PDF statistics:
- 53 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 6 words of extra memory for PDF output out of 10000 (max. 10000000)
-
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.170 

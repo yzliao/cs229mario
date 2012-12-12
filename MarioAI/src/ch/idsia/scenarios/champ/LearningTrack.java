@@ -27,12 +27,6 @@
 
 package ch.idsia.scenarios.champ;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Date;
-
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
 import ch.idsia.benchmark.tasks.BasicTask;
@@ -53,7 +47,7 @@ import edu.stanford.cs229.agents.LearningParams;
  * http://www.marioai.org/learning-track
  */
 
-public final class LearningTrack {
+public class LearningTrack {
   final static long numberOfTrials = 1000;
   final static boolean scoring = false;
   final static int populationSize = 100;
@@ -73,13 +67,13 @@ public final class LearningTrack {
     // Launches the training process. numberOfTrials happen here.
     //marioAIOptions.setEnemies("off");
     //marioAIOptions.setMarioInvulnerable(true);
-    marioAIOptions.setMarioMode(0);
-    learningAgent.learn();
+    //marioAIOptions.setMarioMode(0);
+    //learningAgent.learn();
     //marioAIOptions.setLevelRandSeed((int)(new Date().getTime() / 1000));
-    marioAIOptions.setMarioMode(1);
+    //marioAIOptions.setMarioMode(1);
+    //learningAgent.learn();
+    marioAIOptions.setMarioMode(2);
     learningAgent.learn();
-    //marioAIOptions.setMarioMode(2);
-   // learningAgent.learn();
 
     Agent agent = learningAgent.getBestAgent(); // this agent will be evaluated
     System.out.println("LearningTrack best agent = " + agent);
@@ -89,7 +83,7 @@ public final class LearningTrack {
     marioAIOptions.setAgent(agent);
     
     // Set to a different seed for eval.
-    //marioAIOptions.setArgs("-ls 56866");
+    marioAIOptions.setArgs("-ls 7801");
     
     BasicTask basicTask = new BasicTask(marioAIOptions);
     basicTask.setOptionsAndReset(marioAIOptions);
@@ -132,6 +126,14 @@ public final class LearningTrack {
     LearningAgent learningAgent = (LearningAgent) marioAIOptions.getAgent();
     System.out.println("main.learningAgent = " + learningAgent);
 
+    marioAIOptions.setMarioMode(2);
+    marioAIOptions.setLevelDifficulty(0);
+    marioAIOptions.setDeadEndsCount(true);
+    marioAIOptions.setTubesCount(true);
+    marioAIOptions.setBlocksCount(true);
+    marioAIOptions.setGapsCount(false);
+    marioAIOptions.setCannonsCount(false);
+    marioAIOptions.setGreenMushroomMode(0);
 //        Level 0
     float finalScore = LearningTrack.evaluateSubmission(marioAIOptions, learningAgent);
 

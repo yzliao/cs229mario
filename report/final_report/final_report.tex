@@ -18,7 +18,7 @@
 \newcommand{\putFig}[3]{
         \begin{figure}[htbp]
 		\centering
- 		\includegraphics[width=#3in]{#1} 
+ 		\includegraphics[width=#3in]{figs/#1} 
 		  \caption{#2}
                 \label{fig:#1}
         \end{figure} }        
@@ -60,17 +60,17 @@ Abstract here.
 \section{Introduction}
 Using artificial intelligence (AI) and machine learning (ML) algorithms to play computer games has been widely discussed and investigated, because valuable observations can be made on the ML play pattern vs. that of a human player, and such observations provide knowledge on how to improve the algorithms. Mario AI Competition \cite{togelius20102009} provides the framework to play the classic title Super Mario Bros, and we are interested in using ML techniques to play this game. 
 
-Reinforcement Learning (RL) \cite{sutton1998reinforcement} is one widely-studied and promising ML method for implementing agents that can simulate the behavior of a player \cite{tsay2011evolving}. In this project, we study how to construct an RL Mario controller agent, which can learn from the game environment. One of the difficulties of using RL is how to define state, action, and reward. In addition, playing the game within the framework requires real-time response, therefore the state space cannot be too large. We use a state representation similar to \cite{tsay2011evolving}, that abstracts the whole 22x22 environment description array into several key attributes. We use the Q-Learning algorithm to evolve the decision strategy that aims to maximize the reward. Our controller agent is trained and tested by the 2012 Mario AI Competition evaluation system. 
+Reinforcement Learning (RL) \cite{sutton1998reinforcement} is one widely-studied and promising ML method for implementing agents that can simulate the behavior of a player \cite{tsay2011evolving}. In this project, we study how to construct an RL Mario controller agent, which can learn from the game environment. One of the difficulties of using RL is how to define state, action, and reward. In addition, playing the game within the framework requires real-time response, therefore the state space cannot be too large. We use a state representation similar to \cite{tsay2011evolving}, that abstracts the whole environment description into several discrete-valued key attributes. We use the Q-Learning algorithm to evolve the decision strategy that aims to maximize the reward. Our controller agent is trained and tested by the 2012 Mario AI Competition evaluation system. 
 
-The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provide implementation progress, early evaluation results, and discusses remaining issues and potential improvements.
+The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provides evaluation results.
 
 \section{Background}
-In this section, we briefly introduce Mario AI interfaces and the Q-learning algorithm.
+In this section, we briefly introduce the Mario AI frameword interface and the Q-learning algorithm we used.
 
 \subsection{Game Mechanics and the Mario AI Interface}
-The goal of the game is to control Mario to pass the finish line, and gain a high score one the way by collecting items and beating enemies. Mario is controlled by six keys: UP (not used in this interface), DOWN, LEFT, RIGHT, JUMP, and SPEED. In the game, Mario has three statuses: SMALL, BIG, and FIRE. He can upgrade by eating certain items(mushroom and flower), but he will lose the current status if attacked by enemies. Other than Mario, the world consists of different monsters (Goomba, Koopa, Spiky, Bullet Bill, and Piranha Plant), platforms (hill, gap, cannon, and pipe) and items (coin, mushroom, bricks, flower). The game is over once SMALL Mario is attacked, or when Mario falls into a gap. For more specific descriptions, please see \cite{tsay2011evolving} and \cite{togelius20102009}.
+The goal of the game is to control Mario to pass the finish line, and gain a high score one the way by collecting items and beating enemies. Mario is controlled by six keys: UP (not used in this interface), DOWN, LEFT, RIGHT, JUMP, and SPEED. In the game, Mario has three modes: SMALL, BIG, and FIRE. He can upgrade by eating certain items(mushroom and flower), but he will lose the current mode if attacked by enemies. Other than Mario, the world consists of different monsters (Goomba, Koopa, Spiky, Bullet Bill, and Piranha Plant), platforms (hill, gap, cannon, and pipe) and items (coin, mushroom, bricks, flower). The game is over once SMALL Mario is attacked, or when Mario falls into a gap. For more specific descriptions, please see \cite{tsay2011evolving} and \cite{togelius20102009}.
 
-When performing each step, the Mario AI framework has a call that returns the complete observation of 22 x 22 grids of the current scene. That is, an array containing the positions and types of enemies/items/platforms within this range. This is the whole available information for our agent.
+When performing each step, the Mario AI framework has a call that returns the complete observation of 22 x 22 grids of the current scene, as shown in Figure \ref{fig:mario_scene.png}. That is, an array containing the positions and types of enemies/items/platforms within this range. This is the whole available information for our agent.
 
 The benchmark runs the game in 24 frames per second. The environment checking functions are called every frame. Therefore, while training we have to train and update the Qtable within 42 milliseconds.
 
@@ -166,6 +166,8 @@ Our reward function is a combination of weighted state attribute values and the 
 -After every 100 training iterations, we test the agent by running 50 episodes and use the average metrics as the performance indicator.
 -we have two tests: one chooses one of the training seeds, the other chooses a new random seed.
 -we expect performances of the two tests to be similar.
+
+\putFig{score_figure.eps}{Score Figure}{3}
 
 %%figures here
 

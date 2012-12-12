@@ -80,8 +80,18 @@ public class Evaluation {
     marioAIOptions.setVisualization(false);
     marioAIOptions.setFPS(24);
     
+    // Level 1
+    marioAIOptions.setLevelDifficulty(0);
+    marioAIOptions.setDeadEndsCount(true);
+    marioAIOptions.setTubesCount(true);
+    marioAIOptions.setBlocksCount(true);
+    marioAIOptions.setGapsCount(false);
+    marioAIOptions.setCannonsCount(false);
+    marioAIOptions.setGreenMushroomMode(0);
+    
     agent.setOptions(marioAIOptions);
     agent.setLearningTask(new LearningTask(marioAIOptions));
+    
   }
   
 
@@ -114,8 +124,8 @@ public class Evaluation {
     
     for (int i = 0; i < LearningParams.NUM_EVAL_ITERATIONS; i++) {
       // Set to a different seed for evaluation.
-      if (LearningParams.USE_DIFFERENT_SEED_FOR_EVAL) {
-        marioAIOptions.setLevelRandSeed(Utils.getSeed());
+      if (LearningParams.EVAL_SEED >= 0) {
+        marioAIOptions.setLevelRandSeed(Utils.seeds[LearningParams.EVAL_SEED]);
       }
          
       // Make evaluation on the same episode once.
@@ -185,6 +195,8 @@ public class Evaluation {
         getIntParam(args, "i", LearningParams.NUM_TRAINING_ITERATIONS);
     LearningParams.NUM_EVAL_ITERATIONS =
         getIntParam(args, "ei", LearningParams.NUM_EVAL_ITERATIONS);
+    LearningParams.EVAL_SEED =
+        getIntParam(args, "es", LearningParams.EVAL_SEED);
     
     LearningParams.LOAD_QTABLE = getBooleanParam(args, "l");
     

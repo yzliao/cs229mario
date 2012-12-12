@@ -32,7 +32,7 @@ public class LearningParams {
   /**
    * Whether we should use a different random seed for evaluation.
    */
-  public static boolean USE_DIFFERENT_SEED_FOR_EVAL = false;
+  public static int EVAL_SEED = -1;
 
   /**
    * Exploration chance during evaluation.

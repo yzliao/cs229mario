@@ -12,8 +12,11 @@ import java.util.List;
  */
 public class Utils {
   
-  public static int getSeed() {
-    return (int)(new Date().getTime() / 1000);
+  public static int[] seeds = new int[] {
+    7801, 3125, 234, 9340, 12369, 839158, 4912023, 333311, 87654, 234058
+  };
+  public static int getSeed(int i) {
+    return seeds[i];
   }
 
   public static boolean getBit(int number, int i) {

@@ -164,8 +164,9 @@ public class MarioRLAgent implements LearningAgent {
       options.setMarioMode(m);
       for (int j = 0; j < LearningParams.NUM_SEEDS_TO_TRAIN; j++) {
         if (j > 0) {
-          options.setLevelRandSeed(Utils.getSeed());
+          options.setLevelRandSeed(Utils.getSeed(j - 1));
         }
+        //options.setLevelRandSeed(Utils.getSeed(0));
         for (int i = 0; i < LearningParams.NUM_TRAINING_ITERATIONS; i++) {
           learnOnce();
         }
