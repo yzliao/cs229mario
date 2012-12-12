@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{togelius20102009}
+J.~Togelius, S.~Karakovskiy, and R.~Baumgarten, ``The 2009 mario ai
+  competition,'' in {\em Proceedings of the IEEE Congress on Evolutionary
+  Computation}, Citeseer, 2010.
+
+\bibitem{sutton1998reinforcement}
+R.~Sutton and A.~Barto, {\em Reinforcement learning: An introduction}, vol.~1.
+\newblock Cambridge Univ Press, 1998.
+
+\bibitem{tsay2011evolving}
+J.~Tsay, C.~Chen, and J.~Hsu, ``Evolving intelligent mario controller by
+  reinforcement learning,'' in {\em Technologies and Applications of Artificial
+  Intelligence (TAAI), 2011 International Conference on}, pp.~266--272, IEEE,
+  2011.
+
+\end{thebibliography}
