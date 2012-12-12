@@ -1,5 +1,8 @@
 package edu.stanford.cs229.agents;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
 import ch.idsia.benchmark.tasks.BasicTask;
 import ch.idsia.benchmark.tasks.LearningTask;
@@ -28,16 +31,44 @@ public class Evaluation {
     }
   }
   
+  public static class EvaluationData {
+    float averageScore = 0;
+    float wins = 0;
+    float averageKills = 0;
+    float averageDistance = 0;
+    float averageTimeSpent = 0;
+    
+    public String toString() {
+      return String.format("%f %f %f %f %f",
+          averageScore, wins, averageKills, averageDistance, averageTimeSpent);
+    }
+    
+    public void computeFinalEvalInfo() {
+      averageScore /= LearningParams.NUM_EVAL_ITERATIONS;
+      wins /= LearningParams.NUM_EVAL_ITERATIONS;
+      averageKills /= LearningParams.NUM_EVAL_ITERATIONS;
+      averageDistance /= LearningParams.NUM_EVAL_ITERATIONS;
+      averageTimeSpent /= LearningParams.NUM_EVAL_ITERATIONS;
+    }
+    
+    public void accumulateEvalInfo(EvaluationInfo evaluationInfo) {
+      averageScore += evaluationInfo.computeWeightedFitness();
+      wins += evaluationInfo.marioStatus == Mario.STATUS_WIN ? 1 : 0;
+      averageKills += 1.0 *
+          evaluationInfo.killsTotal / evaluationInfo.totalNumberOfCreatures;
+      averageDistance += 1.0 *
+          evaluationInfo.distancePassedCells / evaluationInfo.levelLength;
+      averageTimeSpent += evaluationInfo.timeSpent;
+    }
+  }
+  
   private Mode mode;
   
   private MarioAIOptions marioAIOptions;
   private MarioRLAgent agent;
   
-  private float averageScore = 0;
-  private float wins = 0;
-  private float averageKills = 0;
-  private float averageDistance = 0;
-  private float averageTimeSpent = 0;
+  private List<EvaluationData> evaluationResults =
+      new ArrayList<EvaluationData>();
   
   public Evaluation(Mode mode) {
     this.mode = mode;
@@ -53,21 +84,13 @@ public class Evaluation {
     agent.setLearningTask(new LearningTask(marioAIOptions));
   }
   
-  private void reset() {
-    averageScore = 0;
-    wins = 0;
-    averageKills = 0;
-    averageDistance = 0;
-    averageTimeSpent = 0;
-  }
 
-  public float evaluate(String dumpFilename) {
+
+  public float evaluate() {
     if (mode == Mode.DEBUG) {
       marioAIOptions.setVisualization(true);
       LearningParams.DEBUG = 2;
     }
-    
-    reset();
     
     agent.learn();
 
@@ -85,7 +108,10 @@ public class Evaluation {
     
     System.out.println("Task = " + basicTask);
     System.out.println("Agent = " + agent);
-
+    
+    EvaluationData results = new EvaluationData();
+    evaluationResults.add(results);
+    
     for (int i = 0; i < LearningParams.NUM_EVAL_ITERATIONS; i++) {
       // Set to a different seed for evaluation.
       if (LearningParams.USE_DIFFERENT_SEED_FOR_EVAL) {
@@ -104,34 +130,17 @@ public class Evaluation {
       }
 
       EvaluationInfo evaluationInfo = basicTask.getEvaluationInfo();
-      accumulateEvalInfo(evaluationInfo);
+      results.accumulateEvalInfo(evaluationInfo);
 
       System.out.println(evaluationInfo.toString());
     }
     
-    computeFinalEvalInfo(dumpFilename);
-    return averageScore;
+    results.computeFinalEvalInfo();
+    return results.averageScore;
   }
   
-  private void computeFinalEvalInfo(String dumpFilename) {
-    averageScore /= LearningParams.NUM_EVAL_ITERATIONS;
-    wins /= LearningParams.NUM_EVAL_ITERATIONS;
-    averageKills /= LearningParams.NUM_EVAL_ITERATIONS;
-    averageDistance /= LearningParams.NUM_EVAL_ITERATIONS;
-    averageTimeSpent /= LearningParams.NUM_EVAL_ITERATIONS;
-    
-    Utils.dump(dumpFilename, String.format("%f\n%f\n%f\n%f\n%f",
-        averageScore, wins, averageKills, averageDistance, averageTimeSpent));
-  }
-  
-  private void accumulateEvalInfo(EvaluationInfo evaluationInfo) {
-    averageScore += evaluationInfo.computeWeightedFitness();
-    wins += evaluationInfo.marioStatus == Mario.STATUS_WIN ? 1 : 0;
-    averageKills += 1.0 *
-        evaluationInfo.killsTotal / evaluationInfo.totalNumberOfCreatures;
-    averageDistance += 1.0 *
-        evaluationInfo.distancePassedCells / evaluationInfo.levelLength;
-    averageTimeSpent += evaluationInfo.timeSpent;
+  public void dumpResult() {
+    Utils.dump("eval.txt", Utils.join(evaluationResults, "\n"));
   }
   
   public static String getParam(String[] args, String name) {
@@ -183,9 +192,10 @@ public class Evaluation {
 
     for (int i = 0; i < numRounds; i++) {
       System.out.println("~ Round " + i + " ~");
-      float finalScore = eval.evaluate(String.format("eval.%d.txt", i));
+      float finalScore = eval.evaluate();
       System.out.println("Final Score = " + finalScore + "\n");
     }
+    eval.dumpResult();
 
     System.exit(0);
   }
