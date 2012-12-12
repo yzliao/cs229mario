@@ -47,41 +47,26 @@ public class ActionQtable extends Qtable {
   @Override
   public void updateQvalue(float reward, long currentStateNumber) {
     transitions.addTransition(prevState, prevAction, currentStateNumber);
-    
+
     // Update Q values using the following update rule:
     //
     // Q(prevState, prevAction) =
     //     (1 - alpha) * Qprev + alpha * (reward + gamma * maxQ)
     //
     // where alpha = learningRate / # prevState/prevAction visited.
-    
-    boolean shouldPrint = prevState == 1026 && prevAction == 2;
-    if (shouldPrint) {
-      Logger.println(3, "++++++++++++++++++++++");
-      Logger.println(3, 
-          "current: " + currentStateNumber + " reward: " + reward);
-    }
-    
-    int bestAction = getBestAction(currentStateNumber);
-    float maxQ = getActionsQValues(currentStateNumber)[bestAction];
 
     float[] prevQs = getActionsQValues(prevState);
     float prevQ = prevQs[prevAction];
-    
+
+    int bestAction = getBestAction(currentStateNumber);
+    float maxQ = getActionsQValues(currentStateNumber)[bestAction];
+
     float alpha =
-        LearningParams.BASE_LEARNING_RATE +
         learningRate / transitions.getCount(prevState, prevAction);
-    
-    Logger.println(4, "count: " + prevState + ", " + prevAction + " = " +
-        transitions.getCount(prevState, prevAction));
-    
+
     float newQ = (1 - alpha) * prevQ +  alpha * (reward + gammaValue * maxQ);
-    
+
     prevQs[prevAction] = newQ;
-    
-    if (shouldPrint) {
-      Logger.println(3, "prevQ: " + prevQ + " maxQ: " + maxQ + " newQ: " + newQ);
-    }
   }
   
   @Override

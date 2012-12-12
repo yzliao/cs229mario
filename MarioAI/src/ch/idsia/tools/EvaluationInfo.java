@@ -105,27 +105,25 @@ public int computeBasicFitness()
     return distancePassedPhys - timeSpent + coinsGained + marioStatus * marioSystemOfValues.win;
 }
 
-public int computeWeightedFitness(SystemOfValues sov)
-{
-    return
-            distancePassedPhys * sov.distance +
-                    flowersDevoured * sov.flowerFire +
-                    marioStatus * sov.win +
-                    marioMode * sov.mode +
-                    mushroomsDevoured * sov.mushroom +
-                    greenMushroomsDevoured * sov.greenMushroom +
-                    coinsGained * sov.coins +
-                    hiddenBlocksFound * sov.hiddenBlock +
-                    killsTotal * sov.kills +
-                    killsByStomp * sov.killedByStomp +
-                    killsByFire * sov.killedByFire +
-                    killsByShell * sov.killedByShell +
-                    marioStatus * timeLeft * sov.timeLeft;
+public int computeWeightedFitness(SystemOfValues sov) {
+  return
+      distancePassedPhys * sov.distance +
+      flowersDevoured * sov.flowerFire +
+      marioStatus * sov.win +
+      marioMode * sov.mode +
+      mushroomsDevoured * sov.mushroom +
+      greenMushroomsDevoured * sov.greenMushroom +
+      coinsGained * sov.coins +
+      hiddenBlocksFound * sov.hiddenBlock +
+      killsTotal * sov.kills +
+      killsByStomp * sov.killedByStomp +
+      killsByFire * sov.killedByFire +
+      killsByShell * sov.killedByShell +
+      marioStatus * timeLeft * sov.timeLeft;
 }
 
-public int computeWeightedFitness()
-{
-    return this.computeWeightedFitness(marioSystemOfValues);
+public int computeWeightedFitness() {
+  return this.computeWeightedFitness(marioSystemOfValues);
 }
 
 public float computeDistancePassed()

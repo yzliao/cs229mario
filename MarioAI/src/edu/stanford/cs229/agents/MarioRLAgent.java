@@ -37,8 +37,6 @@
 
 package edu.stanford.cs229.agents;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +45,7 @@ import ch.idsia.agents.LearningAgent;
 import ch.idsia.benchmark.mario.environments.Environment;
 import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
+import ch.idsia.tools.MarioAIOptions;
 
 /**
  * The learning agent.
@@ -57,9 +56,9 @@ public class MarioRLAgent implements LearningAgent {
 
   private String name;
   
-  // Evaluation task and quota
+  // Training options, task and quota.
+  private MarioAIOptions options;
   private LearningTask learningTask;
-  private int learningQuota;
   
   // Fields for the Mario Agent
   private MarioState currentState;
@@ -119,85 +118,96 @@ public class MarioRLAgent implements LearningAgent {
    */
   @Override
   public void integrateObservation(Environment environment) {
+    // Update the current state.
+    currentState.update(environment);
+    
     if (currentPhase == Phase.INIT && environment.isMarioOnGround()) {
       // Start learning after Mario lands on the ground.
       Logger.println(1, "============== Learning Phase =============");
       currentPhase = Phase.LEARN;
-      currentState.update(environment);
-    } else {
-      // Update the current state.
-      currentState.update(environment);
-      
+    } else if (currentPhase == Phase.LEARN) {
       // Update the Qvalue entry in the Qtable.
       actionTable.updateQvalue(
           currentState.calculateReward(), currentState.getStateNumber());
     }
   }
+  
+  private void learnOnce() {
+    Logger.println(1, "================================================");
+    Logger.println(0, "Trial: %d", learningTrial);
+
+    init();
+    learningTask.runSingleEpisode(1);
+
+    EvaluationInfo evaluationInfo =
+        learningTask.getEnvironment().getEvaluationInfo();
+    
+    int score = evaluationInfo.computeWeightedFitness();
+    
+    Logger.println(1, "Intermediate SCORE = " + score);
+    Logger.println(1, evaluationInfo.toStringSingleLine());
+    
+    scores.add(score);
+
+    // Dump the info of the most visited states into file.
+    if (LearningParams.DUMP_INTERMEDIATE_QTABLE) {
+      actionTable.dumpQtable(
+          String.format(LearningParams.QTABLE_NAME_FORMAT, learningTrial));
+    }
+    
+    learningTrial++;
+  }
 
   @Override
   public void learn() {
-    for (int i = 0; i < learningQuota; ++i) {
-      Logger.println(1, "================================================");
-      Logger.println(0, "Trial: %d.%d", learningTrial, i);
-
-      learningTask.runSingleEpisode(1);
-
-      EvaluationInfo evaluationInfo =
-          learningTask.getEnvironment().getEvaluationInfo();
-      
-      int score = evaluationInfo.computeWeightedFitness();
-      Logger.println(1, "Intermediate SCORE = " + score);
-      Logger.println(1, evaluationInfo.toStringSingleLine());
-      
-      scores.add(score);
-
-      // Dump the info of the most visited states into file.
-      if (LearningParams.DUMP_INTERMEDIATE_QTABLE) {
-        actionTable.dumpQtable(
-            String.format(LearningParams.QTABLE_NAME_FORMAT, learningTrial, i));
+    for (int m = 0; m < LearningParams.NUM_MODES_TO_TRAIN; m++) {
+      options.setMarioMode(m);
+      for (int j = 0; j < LearningParams.NUM_SEEDS_TO_TRAIN; j++) {
+        if (j > 0) {
+          options.setLevelRandSeed(Utils.getSeed());
+        }
+        for (int i = 0; i < LearningParams.NUM_TRAINING_ITERATIONS; i++) {
+          learnOnce();
+        }
       }
     }
-
-    learningTrial++;
+    setUpForEval();
   }
   
   @Override
+  public void init() {
+    Logger.println(1, "=================== Init =================");
+    currentPhase = Phase.INIT;
+    actionTable.explorationChance = LearningParams.EXPLORATION_CHANCE;
+  }
+
+  @Override
   public void reset() {
-    if (currentPhase != Phase.EVAL) {
-      Logger.println(1, "=================== Init =================");
-      currentPhase = Phase.INIT;
-    }
+    Logger.println(1, "================== Reset =================");
     currentState = new MarioState();
   }
   
-  private void setUpForEval() {
-    Logger.println(1, "=========== Dumping Results ===========");
+  public void setUpForEval() {
+    Logger.println(1, "============= Dumping Results ============");
     // Dump final Qtable.
     actionTable.dumpQtable(LearningParams.FINAL_QTABLE_NAME);
     // Dump training scores.
     dumpScores(LearningParams.SCORES_NAME);
-    
-    // Entering EVAL phase.
-    Logger.println(1, "============== Eval Phase =============");
-    currentPhase = Phase.EVAL;
-    LearningParams.DEBUG = LearningParams.EVAL_DEBUG;
 
-    // Set learning and exploration chance for evaluations.
-    actionTable.learningRate = LearningParams.EVAL_LEARNING_RATE;
+    // Entering EVAL phase.
+    Logger.println(1, "================ Eval Phase ==============");
+    currentPhase = Phase.EVAL;
+
+    // Set exploration chance for evaluations.
     actionTable.explorationChance = LearningParams.EVAL_EXPLORATION_CHANCE;
-    
-    //LearningParams.DEBUG = 2;
   }
   
   private void dumpScores(String logfile) {
-    Logger.println(1, "** Dumping scores to " + logfile + " **");
-    try {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(logfile));
-      writer.write(Utils.join(scores, "\n"));
-      writer.close();
-    } catch (Exception x) {
-      System.err.println("Failed to write scores.");
-    }
+    Utils.dump(logfile, Utils.join(scores, "\n"));
+  }
+  
+  public void setOptions(MarioAIOptions options) {
+    this.options = options;
   }
 
   /**
@@ -208,17 +218,14 @@ public class MarioRLAgent implements LearningAgent {
     this.learningTask = learningTask;
   }
 
-  /**
-   * Defines the max number of trials to learn..
-   */
+  @Deprecated
   @Override
   public void setEvaluationQuota(long num) {
-    this.learningQuota = (int)num;
   }
 
+  @Deprecated
   @Override
   public Agent getBestAgent() {
-    setUpForEval();
     return this;
   }
   
@@ -236,11 +243,6 @@ public class MarioRLAgent implements LearningAgent {
   @Override
   public void setName(String name) {
     this.name = name;
-  }
-
-  @Deprecated
-  @Override
-  public void init() {
   }
 
   @Deprecated

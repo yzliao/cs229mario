@@ -8,38 +8,32 @@ package edu.stanford.cs229.agents;
 public class LearningParams {
 
   public static int DEBUG = 0;
-  public static int EVAL_DEBUG = 0;
-  
+
   /**
-   * Total number of iterations to train.
+   * Total number of iterations to train for each configuration (mode/seed).
    */
-  public static final int NUM_TRAINING_ITERATIONS = 30;
-  
+  public static int NUM_TRAINING_ITERATIONS = 800;
+
   /**
    * Number of Mario modes to train.
    */
-  public static final int NUM_MODES_TO_TRAIN = 3;
+  public static int NUM_MODES_TO_TRAIN = 3;
 
   /**
    * Whether we should use a different random seed for training.
    */
-  public static final int NUM_SEEDS_TO_TRAIN = 10;
-  
+  public static int NUM_SEEDS_TO_TRAIN = 1;
+
   /**
    * Number of evaluation iterations to run.
    */
-  public static final int NUM_EVAL_ITERATIONS = 10;
-  
+  public static int NUM_EVAL_ITERATIONS = 10;
+
   /**
    * Whether we should use a different random seed for evaluation.
    */
-  public static final boolean USE_DIFFERENT_SEED_FOR_EVAL = true;
-  
-  /**
-   * Learning rate during evaluation.
-   */
-  public static final float EVAL_LEARNING_RATE = 0f;
-  
+  public static boolean USE_DIFFERENT_SEED_FOR_EVAL = false;
+
   /**
    * Exploration chance during evaluation.
    */
@@ -74,12 +68,7 @@ public class LearningParams {
    * The actual learning rate will decrease as the number of times the given
    * state and action are visited increase.
    */
-  public static final float LEARNING_RATE = 1f;
-  
-  /**
-   * Minimum learning rate.
-   */
-  public static final float BASE_LEARNING_RATE = 1 - LEARNING_RATE;
+  public static final float LEARNING_RATE = 0.8f;
  
   // Reward/state related params.
   /**
@@ -111,7 +100,7 @@ public class LearningParams {
   public static final float[] ENEMIES_AROUND_REWARD_SCALER = {0f, 0f, 0.15f};
   
   public static final class REWARD_PARAMS {
-    public static final int distance = 4;
+    public static final int distance = 2;
     public static final int elevation = 8;
     public static final int collision = -800;
     public static final int killedByFire = 60;
@@ -141,20 +130,20 @@ public class LearningParams {
   /**
    * Whether we should load the final Q table trained from last time.
    */
-  public static final boolean LOAD_QTABLE = true;
+  public static boolean LOAD_QTABLE = false;
   
   /**
    * The format of intermediate Q table dump filenames.
    */
-  public static final String QTABLE_NAME_FORMAT = "qt.%d.%d.txt";
+  public static String QTABLE_NAME_FORMAT = "qt.%d.txt";
   
   /**
    * The filename of the final Q table dump.
    */
-  public static final String FINAL_QTABLE_NAME = "qt.final.txt";
+  public static String FINAL_QTABLE_NAME = "qt.final.txt";
 
   /**
    * The filename of scores dump.
    */
-  public static final String SCORES_NAME = "scores.txt";
+  public static String SCORES_NAME = "scores.txt";
 }
