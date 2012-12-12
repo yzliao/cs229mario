@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=pdflatex 2012.3.3)  10 DEC 2012 22:08
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2012.3.3)  11 DEC 2012 20:38
 entering extended mode
-**final_report.tex
-(C:\Users\Bobo\cs229mario\report\final_report\final_report.tex
+**C:/Users/Bobo/cs229mario/report/final_report/final_report.tex
+(C:/Users/Bobo/cs229mario/report/final_report/final_report.tex
 LaTeX2e <2009/09/24>
 Babel <v3.8l> and hyphenation patterns for english, afrikaans, ancientgreek, ar
 abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
@@ -26,7 +26,7 @@ istensen
 \@IEEEtrantmptoksA=\toks14
 LaTeX Font Info:    Try loading font information for OT1+ptm on input line 373.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\psnfss\ot1ptm.fd"
+("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\ot1ptm.fd"
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 -- Using 8.5in x 11in (letter) paper.
@@ -99,39 +99,39 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 \@IEEEtmpitemindent=\dimen116
 \c@IEEEbiography=\count90
 \@IEEEtranrubishbin=\box26
-) ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
+) ("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
 Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
 Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 \KV@toks@=\toks15
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
 Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\trig.sty"
 Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
+("C:\Program Files\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
 File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
 )
 Package graphics Info: Driver file: pdftex.def on input line 91.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
+("C:\Program Files\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
 File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
-Package: infwarerr 2010/04/08 v1.3 Providing info/warning/message (HO)
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
-Package: ltxcmds 2011/04/18 v1.20 LaTeX kernel commands for general use (HO)
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 )
 \Gread@gobject=\count91
 ))
 \Gin@req@height=\dimen117
 \Gin@req@width=\dimen118
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\listings\listings.sty"
+(C:\Users\Bobo\AppData\Roaming\MiKTeX\2.9\tex\latex\listings\listings.sty
 \lst@mode=\count92
 \lst@gtempboxa=\box27
 \lst@token=\toks16
@@ -145,41 +145,41 @@ Package: ltxcmds 2011/04/18 v1.20 LaTeX kernel commands for general use (HO)
 \lst@lineno=\count97
 \lst@maxwidth=\dimen122
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\listings\lstmisc.sty"
+(C:\Users\Bobo\AppData\Roaming\MiKTeX\2.9\tex\latex\listings\lstmisc.sty
 File: lstmisc.sty 2007/02/22 1.4 (Carsten Heinz)
 \c@lstnumber=\count98
 \lst@skipnumbers=\count99
 \lst@framebox=\box28
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\listings\listings.cfg"
+(C:\Users\Bobo\AppData\Roaming\MiKTeX\2.9\tex\latex\listings\listings.cfg
 File: listings.cfg 2007/02/22 1.4 listings configuration
 ))
 Package: listings 2007/02/22 1.4 (Carsten Heinz)
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\psfrag\psfrag.sty"
+(C:\Users\Bobo\AppData\Roaming\MiKTeX\2.9\tex\latex\psfrag\psfrag.sty
 Package: psfrag 1998/04/11 v3.04 PSfrag (MCG)
 \pfg@pcount=\count100
 \pfg@scount=\count101
 \pfg@temp=\write3
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\ams\math\amsmath.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsmath.sty"
 Package: amsmath 2000/07/18 v2.13 AMS math features
 \@mathmargin=\skip44
 
 For additional information on amsmath, use the `?' option.
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\ams\math\amstext.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amstext.sty"
 Package: amstext 2000/06/29 v2.01
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\ams\math\amsgen.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsgen.sty"
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks17
 \ex@=\dimen123
 ))
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\ams\math\amsbsy.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsbsy.sty"
 Package: amsbsy 1999/11/29 v1.2d
 \pmbraise@=\dimen124
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\ams\math\amsopn.sty"
+("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsopn.sty"
 Package: amsopn 1999/12/14 v2.01 operator names
 )
 \inf@bad=\count102
@@ -223,7 +223,7 @@ Package amsmath Warning: Unable to redefine math accent \vec.
 \mathdisplay@stack=\toks21
 LaTeX Info: Redefining \[ on input line 2666.
 LaTeX Info: Redefining \] on input line 2667.
-) ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\amsfonts.sty"
+) ("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\amsfonts.sty"
 Package: amsfonts 2009/06/22 v3.00 Basic AMSFonts support
 \symAMSa=\mathgroup4
 \symAMSb=\mathgroup5
@@ -244,7 +244,7 @@ LaTeX Font Info:    ... okay on input line 53.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 53.
 LaTeX Font Info:    ... okay on input line 53.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
+(C:\Users\Bobo\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count114
 \scratchdimen=\dimen132
@@ -255,44 +255,41 @@ LaTeX Font Info:    ... okay on input line 53.
 \MPscratchCnt=\count117
 \MPscratchDim=\dimen133
 \MPnumerator=\count118
+\makeMPintoPDFobject=\count119
 \everyMPtoPDFconversion=\toks23
 )
-\c@lstlisting=\count119
-Missing character: There is no â in font ptmr7t!
-Missing character: There is no € in font ptmr7t!
-Missing character: There is no ¢ in font ptmr7t!
+\c@lstlisting=\count120
 LaTeX Font Info:    Try loading font information for U+msa on input line 78.
- ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
+ ("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
 File: umsa.fd 2009/06/22 v3.00 AMS symbols A
 )
 LaTeX Font Info:    Try loading font information for U+msb on input line 78.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
 File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 )
 
 LaTeX Warning: Citation `??' on page 1 undefined on input line 85.
 
 [1
-Non-PDF special ignored!{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}
+Non-PDF special ignored!{C:/Users/Bobo/AppData/Local/MiKTeX/2.9/pdftex/config/p
+dftex.map}
 
 
-]
-<mario_scene.png, id=15, 492.33937pt x 387.69844pt>
+] <mario_scene.png, id=15, 492.33937pt x 387.69844pt>
 File: mario_scene.png Graphic file (type png)
- <use mario_scene.png>
+
+<use mario_scene.png>
 Package pdftex.def Info: mario_scene.png used on input line 155.
 (pdftex.def)             Requested size: 252.94499pt x 199.18478pt.
 LaTeX Font Info:    Try loading font information for OMS+ptm on input line 159.
 
-
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\psnfss\omsptm.fd"
+ ("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\omsptm.fd"
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 159.
-
-(C:\Users\Bobo\cs229mario\report\final_report\final_report.bbl)
+ (C:\Users\Bobo\cs229mario\report\final_report\final_report.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -311,25 +308,24 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 3747 strings out of 494049
+ 3755 strings out of 494049
  55083 string characters out of 3146069
- 118987 words of memory out of 3000000
- 7018 multiletter control sequences out of 15000+200000
+ 119124 words of memory out of 3000000
+ 7025 multiletter control sequences out of 15000+200000
  36949 words of font info for 72 fonts, out of 3000000 for 9000
  715 hyphenation exceptions out of 8191
- 27i,14n,32p,962b,219s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Program Files (x86)/MiKTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Progra
-m Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program 
-Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Program Fil
-es (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program Files 
-(x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Files (x8
-6)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files (x86)/M
-iKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiK
-TeX 2.9/fonts/type1/urw/times/utmb8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fon
-ts/type1/urw/times/utmbi8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/u
-rw/times/utmr8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/urw/times/ut
-mri8a.pfb>
-Output written on final_report.pdf (2 pages, 620499 bytes).
+ 27i,14n,32p,989b,219s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Program File
+s/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Program Files/MiKTeX 2.9/font
+s/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/p
+ublic/amsfonts/cm/cmr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/ams
+fonts/cm/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
+msy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/times/utmb8a.pfb><C:/Pro
+gram Files/MiKTeX 2.9/fonts/type1/urw/times/utmbi8a.pfb><C:/Program Files/MiKTe
+X 2.9/fonts/type1/urw/times/utmr8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
+/urw/times/utmri8a.pfb>
+Output written on final_report.pdf (2 pages, 647623 bytes).
 PDF statistics:
  53 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
