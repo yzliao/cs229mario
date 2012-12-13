@@ -205,7 +205,7 @@ Figure.~\ref{fig:fig4} shows the time spent for the Mario to pass a episodes suc
 \section{Conclusion}
 In this project, we used Q-learning algorithm to control the Mario. Our learning algorithm demonstrates fast convergence to the optimal Q-value with high successful rate. The optimal policy also has high killing rate and needs less time to be successful. In addition, our results show that the optimal policy is generalized to tackle different and random environment. Further, we observe that long term reward maximization over-performs the short term reward maximization. Finally, we show the the decaying learning rate algorithm converges to a better policy than the fixed learning rate algorithm.
 
-There are many future works regarding using machine learning to play Mario. For example, in our learning algorithm, we did not design the state for the Mario to grab mushroom and flowers. In addition, our algorithm focuses on optimizing the successful rate. Other design directions include maximizing the coin collection and maximizing the killing rate. We believe that our work provides a good introduction to this problem and will benefit the people with interests in using reinforcement learning to play computer game.
+There are many future works regarding using machine learning to play Mario. For example, in our learning algorithm, we did not design the state for the Mario to grab mushroom and flowers. In addition, our algorithm focuses on optimizing the successful rate. Othe
 
 
 
