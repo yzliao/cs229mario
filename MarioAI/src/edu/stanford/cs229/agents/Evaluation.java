@@ -1,6 +1,7 @@
 package edu.stanford.cs229.agents;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ch.idsia.benchmark.mario.engine.sprites.Mario;
@@ -123,9 +124,12 @@ public class Evaluation {
     
     for (int i = 0; i < LearningParams.NUM_EVAL_ITERATIONS; i++) {
       // Set to a different seed for evaluation.
-      if (LearningParams.EVAL_SEED >= 0) {
-        marioAIOptions.setLevelRandSeed(Utils.seeds[LearningParams.EVAL_SEED]);
-      }
+      
+      //if (LearningParams.EVAL_SEED >= 0) {
+      //  marioAIOptions.setLevelRandSeed(Utils.seeds[LearningParams.EVAL_SEED]);
+      //}
+      Date date = new Date();
+      marioAIOptions.setLevelRandSeed(Math.round(date.getTime() % 1000));
          
       // Make evaluation on the same episode once.
       int failedCount = 0;

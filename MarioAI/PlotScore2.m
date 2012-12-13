@@ -1,6 +1,6 @@
 %% PlotScore.m
 clear all
-%close all
+close all
 clc
 
 nTrainEachIter = 20;
@@ -28,7 +28,7 @@ hold on
 filterLength = 20;
 f = 1/filterLength * ones(filterLength, 1);
 
-plot(x,eval_low_gamma(:,1),'y--', 'Linewidth', 1)
+plot(x,eval_low_gamma(:,1),'--', 'Linewidth', 1, 'color', [1, 155/255, 51/255])
 filtered1 = filter(f, 1, eval_low_gamma(:, 1));
 plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1 121/255 0]);
 xlim([0, nTrainEachIter * nIter])
@@ -53,9 +53,9 @@ xlabel('Training Episodes', 'FontSize', 20);
 ylabel('Evaluation Scores', 'FontSize', 20);
 set(gca, 'XTick', [0:500:5000]);
 set(gca,'FontSize',10);
-legend('Learning Curve, low \gamma', 'Smoothed Learning Curve, low \gamma', ...
-       'Learning Curve, fixed \alpha', 'Smoothed Learning Curve, fixed \alpha', ...
-       'Learning Curve', 'Smoothed Learning Curve', 'Evaluation on Other Random Seeds', 'Location', 'SouthWest')
+legend('Low \gamma', 'Low \gamma, smoothed', ...
+       'Fixed \alpha', 'Fixed \alpha, smoothed', ...
+       'Optimal Parameters', 'Optimal Parameters, smoothed', 'Evaluation on Other Random Seeds', 'Location', 'SouthWest')
 FigHandle = figure(1);
 set(FigHandle, 'Position', [100, 100, 900, 600]);
 
@@ -69,9 +69,9 @@ hold on
 filterLength = 20;
 f = 1/filterLength * ones(filterLength, 1);
 
-plot(x,eval_low_gamma(:,2),'y--', 'Linewidth', 1)
+plot(x,eval_low_gamma(:,2),'--', 'Linewidth', 1, 'color', [1, 155/255, 51/255])
 filtered1 = filter(f, 1, eval_low_gamma(:, 2));
-plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1, 225/255, 51/255]);
+plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1 121/255 0]);
 xlim([0, nTrainEachIter * nIter])
 
 plot(x,eval_fixe_dalpha(:,2),'c--', 'Linewidth', 1)
@@ -88,9 +88,9 @@ xlabel('Training Episodes', 'FontSize', 20);
 ylabel('Winning Probability', 'FontSize', 20);
 set(gca, 'XTick', [0:500:5000]);
 set(gca,'FontSize',10);
-legend('Low \gamma', 'Smoothed, low \gamma', ...
-       'Fixed \alpha', 'Smoothed, fixed \alpha', ...
-       'Our params', 'Smoothed', 'Location', 'SouthWest')
+legend('Low \gamma', 'Low \gamma, smoothed', ...
+       'Fixed \alpha', 'Fixed \alpha, smoothed', ...
+       'Optimal Parameters', 'Optimal Parameters, smoothed', 'Location', 'Best')
 FigHandle = figure(2);
 set(FigHandle, 'Position', [100, 100, 900, 600]);
 
@@ -103,9 +103,9 @@ hold on
 filterLength = 20;
 f = 1/filterLength * ones(filterLength, 1);
 
-plot(x,eval_low_gamma(:,3),'y--', 'Linewidth', 1)
+plot(x,eval_low_gamma(:,3),'--', 'Linewidth', 1, 'color', [1, 155/255, 51/255])
 filtered1 = filter(f, 1, eval_low_gamma(:, 3));
-plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1, 225/255, 51/255]);
+plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1 121/255 0]);
 xlim([0, nTrainEachIter * nIter])
 
 plot(x,eval_fixe_dalpha(:,3),'c--', 'Linewidth', 1)
@@ -122,9 +122,9 @@ xlabel('Training Episodes', 'FontSize', 20);
 ylabel('% of Monster Killed', 'FontSize', 20);
 set(gca, 'XTick', [0:500:5000]);
 set(gca,'FontSize',10);
-legend('Low \gamma', 'Smoothed, low \gamma', ...
-       'Fixed \alpha', 'Smoothed, fixed \alpha', ...
-       'Our params', 'Smoothed', 'Location', 'SouthWest')
+legend('Low \gamma', 'Low \gamma, smoothed', ...
+       'Fixed \alpha', 'Fixed \alpha, smoothed', ...
+       'Optimal Parameters', 'Optimal Parameters, smoothed', 'Location', 'Best')
 FigHandle = figure(3);
 set(FigHandle, 'Position', [100, 100, 900, 600]);
 
@@ -137,9 +137,9 @@ hold on
 filterLength = 20;
 f = 1/filterLength * ones(filterLength, 1);
 
-plot(x,eval_low_gamma(:,5),'y--', 'Linewidth', 1)
+plot(x,eval_low_gamma(:,5),'--', 'Linewidth', 1, 'color', [1, 155/255, 51/255])
 filtered1 = filter(f, 1, eval_low_gamma(:, 5));
-plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1, 225/255, 51/255]);
+plot(x-filterLength/2*nTrainEachIter, filtered1, '-', 'Linewidth', 3, 'color', [1 121/255 0]);
 xlim([0, nTrainEachIter * nIter])
 
 plot(x,eval_fixe_dalpha(:,5),'c--', 'Linewidth', 1)
@@ -156,23 +156,8 @@ xlabel('Training Episodes', 'FontSize', 20);
 ylabel('Time Spent(frames)', 'FontSize', 20);
 set(gca, 'XTick', [0:500:5000]);
 set(gca,'FontSize',10);
-legend('Low \gamma', 'Smoothed, low \gamma', ...
-       'Fixed \alpha', 'Smoothed, fixed \alpha', ...
-       'Our params', 'Smoothed', 'Location', 'SouthWest')
+legend('Low \gamma', 'Low \gamma, smoothed', ...
+       'Fixed \alpha', 'Fixed \alpha, smoothed', ...
+       'Optimal Parameters', 'Optimal Parameters, smoothed', 'Location', 'Best')
 FigHandle = figure(4);
 set(FigHandle, 'Position', [100, 100, 900, 600]);
-
-%%
-figure(3)
-plot(x,eval_original(:,3),'k-h');
-plot(x,eval_original(:,4),'g-s');
-legend('','','')
-
-%%
-figure
-plot(x,eval(:,5),'b-<');
-%%
-figure
-
-
-grid on
