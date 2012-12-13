@@ -66,6 +66,8 @@ public class ActionQtable extends Qtable {
     
     //alpha = 0.15f;
 
+    //alpha = 0.15f;
+    
     float newQ = (1 - alpha) * prevQ +  alpha * (reward + gammaValue * maxQ);
 
     prevQs[prevAction] = newQ;
