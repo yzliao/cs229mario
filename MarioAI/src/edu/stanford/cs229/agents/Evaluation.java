@@ -81,6 +81,7 @@ public class Evaluation {
     marioAIOptions.setFPS(24);
     
     // Level 1
+    /*
     marioAIOptions.setLevelDifficulty(0);
     marioAIOptions.setDeadEndsCount(true);
     marioAIOptions.setTubesCount(true);
@@ -88,10 +89,9 @@ public class Evaluation {
     marioAIOptions.setGapsCount(false);
     marioAIOptions.setCannonsCount(false);
     marioAIOptions.setGreenMushroomMode(0);
-    
+*/    
     agent.setOptions(marioAIOptions);
     agent.setLearningTask(new LearningTask(marioAIOptions));
-    
   }
   
 
