@@ -95,7 +95,6 @@ public class Evaluation {
   }
   
 
-
   public float evaluate() {
     if (mode == Mode.DEBUG) {
       marioAIOptions.setVisualization(true);
