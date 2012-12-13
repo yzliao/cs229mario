@@ -57,7 +57,8 @@ public class LearningParams {
    * if it is many moves away.
    */
   public static final float GAMMA_VALUE = 0.6f;
-
+  //public static final float GAMMA_VALUE = 0.2f;
+  
   /**
    * The learningRate determines how new information affects accumulated
    * information from previous instances. If the learningRate is 1, then the new

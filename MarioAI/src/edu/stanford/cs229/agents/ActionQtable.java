@@ -63,7 +63,11 @@ public class ActionQtable extends Qtable {
 
     float alpha =
         learningRate / transitions.getCount(prevState, prevAction);
+    
+    //alpha = 0.15f;
 
+    //alpha = 0.15f;
+    
     float newQ = (1 - alpha) * prevQ +  alpha * (reward + gammaValue * maxQ);
 
     prevQs[prevAction] = newQ;
