@@ -54,7 +54,8 @@ Email: rabbiest@gmail.com}
 \maketitle
 
 \begin{abstract}
-Abstract here.
+In this paper, we study applying Reinforcement Learning to design a automatic agent to play the game Super Mario Bros. One of the challenge is how to handle the complex game environment. By abstracting the game environment into a state vector and using Q learning --- an algorithm oblivious to transitional probabilities --- we achieve tractable computation time and fast convergence. After training 5000 iterations, our agent is able to win about 90\% of the time. We also compare and analyze the choice for learning parameters $\alpha$ and $\gamma$.
+
 \end{abstract}
 
 \section{Introduction}
@@ -62,7 +63,7 @@ Using artificial intelligence (AI) and machine learning (ML) algorithms to play 
 
 Reinforcement Learning (RL) \cite{sutton1998reinforcement} is one widely-studied and promising ML method for implementing agents that can simulate the behavior of a player \cite{tsay2011evolving}. In this project, we study how to construct an RL Mario controller agent, which can learn from the game environment. One of the difficulties of using RL is how to define state, action, and reward. In addition, playing the game within the framework requires real-time response, therefore the state space cannot be too large. We use a state representation similar to \cite{tsay2011evolving}, that abstracts the whole environment description into several discrete-valued key attributes. We use the Q-Learning algorithm to evolve the decision strategy that aims to maximize the reward. Our controller agent is trained and tested by the 2012 Mario AI Competition evaluation system. 
 
-The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provides evaluation results.
+The rest of this report is organized as follows: Section 2 provides a brief overview of the Mario AI interface and the Q-Learning algorithm; Section 3 explains how we define the state, action, reward to be used in RL; Section 4 provides evaluation results; Section 5 concludes and give some possible future work.
 
 \section{Background}
 In this section, we briefly introduce the Mario AI frameword interface and the Q-learning algorithm we used.
@@ -70,117 +71,127 @@ In this section, we briefly introduce the Mario AI frameword interface and the Q
 \subsection{Game Mechanics and the Mario AI Interface}
 The goal of the game is to control Mario to pass the finish line, and gain a high score one the way by collecting items and beating enemies. Mario is controlled by six keys: UP (not used in this interface), DOWN, LEFT, RIGHT, JUMP, and SPEED. In the game, Mario has three modes: SMALL, BIG, and FIRE. He can upgrade by eating certain items(mushroom and flower), but he will lose the current mode if attacked by enemies. Other than Mario, the world consists of different monsters (Goomba, Koopa, Spiky, Bullet Bill, and Piranha Plant), platforms (hill, gap, cannon, and pipe) and items (coin, mushroom, bricks, flower). The game is over once SMALL Mario is attacked, or when Mario falls into a gap. For more specific descriptions, please see \cite{tsay2011evolving} and \cite{togelius20102009}.
 
-When performing each step, the Mario AI framework has a call that returns the complete observation of 22 x 22 grids of the current scene, as shown in Figure \ref{fig:mario_scene.png}. That is, an array containing the positions and types of enemies/items/platforms within this range. This is the whole available information for our agent.
+When performing each step, the Mario AI framework interface call could return the complete observation of 22 x 22 grids of the current scene, as shown in Figure \ref{fig:mario_scene.png}. That is, an array containing the positions and types of enemies/items/platforms within this range. This is the whole available information for our agent.
 
 The benchmark runs the game in 24 frames per second. The environment checking functions are called every frame. Therefore, while training we have to train and update the Qtable within 42 milliseconds.
 
-\subsection{Q-Learning}
-Q-learning treats the learning environment as a state machine, and maintains a reward value, denoted by Q, for each pair of (state, action) in a table. Here, $Q(s,a)$ denotes the Q-value, where $s$ is the state and $a$ is the action. For each action in a particular state, a reward will be given. The Q-value is updated based on reward by following rule:
+\subsection{$\epsilon$-greedy Q-Learning}
+Q-learning treats the learning environment as a state machine, and performs value iteration to find the optimal policy. It maintains a value of expected total (current and future) reward, denoted by Q, for each pair of (state, action) in a table. For each action in a particular state, a reward will be given and the Q-value is updated by the following rule:
 \begin{equation}
 \label{eq:Qupdate}
 Q(s_t,a_t) \leftarrow (1-\alpha)Q(s_t,a_t) + \alpha_{s, a}(r+\gamma\max(Q(s_{t+1},a_{t+1})))
 \end{equation}
-In the Q-learning algorithm, there are four main factors: current state, chosen action, reward and future state. In (\ref{eq:Qupdate}), $Q(s_t,a_t)$ denotes the Q-value of current state and $Q(s_{t+1},a_{t+1})$ denotes the Q-value of future state. $a \in \left[0,1\right]$ is the learning rate, $\gamma \left[0,1\right]$ is the discount rate, and $r$ is the reward. (\ref{eq:Qupdate}) shows that for each current state, we update the Q-value based on the maximum Q-value of the next state.
+In the Q-learning algorithm, there are four main factors: current state, chosen action, reward and future state. In (\ref{eq:Qupdate}), $Q(s_t,a_t)$ denotes the Q-value of current state and $Q(s_{t+1},a_{t+1})$ denotes the Q-value of future state. $a \in \left[0,1\right]$ is the learning rate, $\gamma \left[0,1\right]$ is the discount rate, and $r$ is the reward. (\ref{eq:Qupdate}) shows that for each current state, we update the Q-value as a combination of current value, current rewards and max possible future value.
 
-Note we use the decreasing learning rate $\alpha_{s, a}$ \cite{??} is different for different $(s,a)$ pairs. Specifically, 
+We chose Q-learning for two reasons: 
+\begin{enumerate}
+\item
+Although we model the Mario game as approximately Markov Model, the specific transitional probabilities between the states is not known. Had we used the normal reinforcement learning value iteration, we will have to train the state transitional probabilities as well. On the other hand, Q-learning can converge without using state transitional probabilities ("model free"). Therefore Q-learning suits our need well.
+\item
+When updating value, normal value iteration needs to calculate the expected future state value, which requires reading the \textit{entire} state table. In comparison, Q learning only needs fetching two rows (values for $s_t$ and $s_{t+1}$) in the Q table. With the dimension of the Q table in thousands, Q learning update is a lot faster, which also means given the computation time and memory constraint, using Q table allows a larger state space design.
+\end{enumerate}
+
+The learning rate $\alpha$ affects how fast learning converges. We use a decreasing learning rate $\alpha_{s, a}$ \cite{watkins} different for different $(s,a)$ pairs. Specifically, 
 \begin{equation}
 \label{eq:alpha}
-\alpha_{s_t, a_t} = \frac{1}{\text{\# of times action $s_t, a_t$ has been performed}}
+\alpha_{s_t, a_t} = \frac{\alpha_0}{\text{\# of times action $a_t$ performed in $s_t$}}
 \end{equation}
-the decreasing learning rate allows for better convergence.
+the equation is chosen based the criteria of proposed by Watkins' original Q-learning paper. He shows the following properties of $\alpha$ is sufficient for the Q values to converge.
+\begin{enumerate}
+\item
+$\alpha(s_t, a_t) \rightarrow 0$ as $t\rightarrow 0$.
+\item
+$\alpha(s_t, a_t)$ monotonically decreases with $t$.
+\item
+$\sum_{t=1}^{\infty}\alpha(s_t, a_t) = \infty$.
+\end{enumerate}
+One can easily verify the series \ref{eq:alpha} satisfy all the properties.
 
+The discount factor $\gamma$ denotes how much future state is taken into account during optimization. We evaluate under several $\gamma$ values and chooses 0.6 as the final value. We will show that non-optimal learning parameters lead to highly degenerated performance in the evaluation section.
+
+When training our agent, we actually used $\epsilon$-greedy Q-learning to explore more states. The algorithm is a small variation of Q-learning: each step the algorithm chooses random action with probability $\epsilon$, or the best action according to the Q table with probability $1 - \epsilon$. After performing the action, the Q table is updated as in \ref{eq:Qupdate}.
 
 \section{Mario Controller Design Using Q-Learning}
-%To illustrate why state space size is a problem, consider using the native 22x22 grid representation. There are 13 possibilities for each block. Now if we take a $22\times 22$ grid, there are totally
-%\begin{equation}
-%13^{22\times 22 - 1}
-%\end{equation}
-%states, which by no means our algorithm can handle. We therefore use a state abstraction similar to \cite{tsay2011evolving}. The 7 attributes our state has are:
-%
-%\begin{itemize}
-%\item Mario mode: 0 - small, 1 - big, 2-fire
-%\item Enemy present: a 4-bit field denoting whether there is an enemy in 4 certain directions. From 1st to 4th bit denotes higher front, higher back, ground front, ground back.
-%\item Brick exist: 1 - there exist a brick/question mark within a given range; 0 -- there does not exist a brick within a given range
-%\item Item exist: type of most valuable items nearby. 0-no item, 1-coin, 2-mushroom, 3-flower
-%\item Near gap: weather or not there is a gap within a given range
-%\item On gap: weather or not Mario is jumping across a gap or falling in the gap
-%\item Enemy type: represent the enemy type within a given range
-%\end{itemize}
-%
-%As a results, we have a total of $3\times 2^{11} = 6144$ states, which is still large, but explorable.
-%
-%We also abstract the actions available by creating "tasks" for Mario to choose. Each task may consist a series of keystrokes. Once a task is chosen, the corresponding keystrokes are determined from the environment observations using heuristics. In short, we learn the preferences and code the detailed operations. The 4 tasks are:
-%\begin{itemize}
-%\item Attack monster: attack enemies by stomping, fireball, and shell
-%\item Search block: search bricks and question boxes
-%\item Collect item: collect the coins and upgrade items available
-%\item Pass through task: controlling Mario to cross the landforms and obstacles to move rightward
-%\item Avoidance task: avoiding enemies and not getting hurt
-%\end{itemize}
-%
-%Now, we reduce the number of state-action pairs to $6144\times 5 = 30720$.
-%
-%We use the final score measure defined in the evaluation of Mario AI framework as our reward function, which is a weighted sum of the physical distance crossed, number of coins obtained, current Mario mode, etc.
-
+In this section, we describe how we design the state, action, and reward to be used in the Q-learning algorithm. We also briefly comment on why we design the state as it is.
 \subsection{Mario State}
-The state consists of the following fields:
+We discretize the environment description into the following integer valued attributes:
 \begin{itemize}
 \item
 Mario Mode: 0 - small, 1 - big, 2-fire
 \item
-Direction: 8 directions + stay. Total of 9 possible values;
+Direction: The direction of Mario's velocity in current frame. 8 directions + stay. Total of 9 possible values;
 \item
 If stuck: 0 or 1. Set true if Mario doesn't make movement over several frames.
 \item 
-If on group: 0 or 1. 
+If on ground: 0 or 1. 
 \item
 If can jump: 0 or 1.
 \item
-If collided with creatures: 0 or 1.
+If collided with creatures in current frame: 0 or 1.
 \item
 Nearby enemies: denoting whether there is an enemy in 8 certain directions in 3x3 window (or 4x3 window in large/fire Mario mode)
 \item
 Midrange enemies: denoting whether there is an enemy in 8 certain directions in 7x7 window (or 8x7 window in large/fire Mario mode).
 \item
-Far enemies: denoting whether there is an enemy in 8 certain directions in 11x11 window (or 12x11 window in large/fire Mario mode).
+Far enemies: denoting whether there is an enemy in 8 certain directions in 11x11 window (or 12x11 window in large/fire Mario mode). Note the nearby, midrange, and far enemies attributes are exclusive.
 \item
-If enemies killed by stomp: 0 or 1.
+If enemies killed by stomp: 0 or 1. Set true if enemy killed by stop in current frame.
 \item
-If enemies killed by fire: 0 or 1.
+If enemies killed by fire: 0 or 1. Set true if enemy killed by fire in current frame.
 \item
-Obstacles: 4-bit boolean indicating whether there exist obstacles in front of Mario.
+Obstacles: 4-bit boolean indicating whether there exist obstacles in front of Mario. See figure \ref{fig:mario_scene.png}
 \end{itemize}
 
-Note the nearby, midrange, and far enemies attributes are exclusive.
+A Mario state thus needs 33 bits to encode, meaning the number of possible states is $2^33$. However, in actual scenes no every state will appear. As we use a hashtable to store the q values, only states visited will be stored and tracked. At the end of training, we found there are only about 2000 states in the table, meaning the state space is very sparse.
+
+The "stuck" state variable is added to tackle the situations where the action taken doesn't work as expected due to the "position rounding problem". For example, we notice when Mario is close to a tube, the JUMP+RIGHT action is chosen in order to jump up the tube, which is correct. However, when Mario is too close to the tube, JUMP key will not work and Mario won't move. As a result Mario will be performing the same action over and over (stucked). By adding a "stuck" state variable, we observe Mario is able to go into a new state and choose different actions in order to break the loop.
 
 \putFig{mario_scene.png}{Mario Scene}{3.5}
-The figure \ref{fig:mario_scene.png} shows a typical scene of the Mario environment consisting of the platform and enemies. The area within dark blue box indicates the range of nearby enemies. The area between dark blue and lighter blue boxes indicates the mid-range enemies. The area between purple and lighter blue enemies indicates the far enemies. For instance, in the figure we have both mid-range and far enemies. The four red circles denote the obstacles array.
+The figure \ref{fig:mario_scene.png} shows a typical scene of the Mario environment consisting of the platform and enemies. The area within dark blue, lighter blue, purple boxes indicates the range of nearby, midrange, and far enemies respectively. For instance, in the figure we have both mid-range and far enemies. In the easy level we coped, we don't distinguish different typed enemies. The four red circles denote the obstacles array: if there is obstacle the corresponding bit is set to 1. 
 
 \subsection{Actions}
-The Mario agent performs one of 12 actions. The combination \{LEFT, RIGHT, STAY\} x \{JUMP, NOTJUMP\} x \{SPEED(FIRE), NOSPEED\}.
+The Mario agent performs one of 12 actions from the key combination \{LEFT, RIGHT, STAY\} x \{JUMP, NOTJUMP\} x \{SPEED(FIRE), NOSPEED\}.
 
 \subsection{Rewards}
-Our reward function is a combination of weighted state attribute values and the delta distance/elevation it performs from the last frame. We also let the reward of moving forward decrease when nearby enemies are present. Note our reward function is "approximately" only a function of our state only. Had us included the magnitude of speed, it will be completely determined by the state.
+Our reward function is a combination of weighted state attribute values and the delta distance/elevation it performs from the last frame. Basically, moving forward, jumping onto higher platforms and killing enemies will be positively rewarded, whereas moving backward, colliding with enemies and being stuck will be negatively rewarded. We also let the reward of moving forward decrease when nearby enemies are present. 
+Note we carefully design our state such that the reward $R(s)$ is only a function of the state $s$, not based on what actions are taken to reach $s$.
 
 \section{Evaluation Results}
-For training the Q-learning algorithm, we firstly initialized the Q-table by a uniform distribution, i.e. $Q \sim \mathcal{U}\left(-0.1,0.1\right)$. Then we trained the Q-learning algorithm by 5000 iterations for fixed episode setup and seed. For every 20 training iterations, we evaluated the algorithm performance by running 100 episodes and use the average metrics as the performance indicators. The evaluation episode parameters are identical to the training parameters.
+For training the Q-learning algorithm, we firstly initialize the Q-table entries with a uniform distribution, i.e. $Q \sim \mathcal{U}\left(-0.1,0.1\right)$. Then we trained the agent by 15000 iterations on a fixed level for the three Mario modes. The order is: train the level/episode 20 times for small Mario, 20 times for large Mario, 20 times for fire Mario, repeat, etc. We believe in this order the fire Mario will be able to use the Q table information from previous runs even when he is attacked and downgraded. During training the learning parameters are
+\begin{align*}
+\alpha(s_t, a_t) &= \frac{\alpha_0}{\text{\# of times $a_t$ performed in $s_t$}} \\
+\alpha_0 &= 0.8\\
+\gamma &= 0.6\\
+\epsilon &= 0.3
+\end{align*}
 
-%-we train each Mario mode for 500 iterations, for example under 10 different random seeds.
-%-After every 100 training iterations, we test the agent by running 50 episodes and use the average metrics as the performance indicator.
-%-we have two tests: one chooses one of the training seeds, the other chooses a new random seed.
-%-we expect performances of the two tests to be similar.
+For every 20 training episodes of each mode, we evaluate the performance by running 100 episodes on the current Q table and use the average metrics as the performance indicators. The evaluation episodes are run with $\alpha = 0$, $\epsilon = 0.01$, so the learning is turned off and random exploration is minimal. It is purely a test of how good the policy is.
+
+We use 4 metrics to evaluate performance
+\begin{enumerate}
+\item
+A composite "score" combining weighted win status, kills total, distance passed and time spent.
+\item
+The probability the agent beats the level.
+\item
+The percentage of monster killed.
+\item
+The time spent on the level.
+\end{enumerate}•
 
 \putFig{fig1}{Evaluation Score}{3.5}
 
-Figure.~\ref{fig:fig1} shows the learning curves of evaluation score. For our optimal parameter sets, we had the initial learning rate to be $\alpha = 0.8$ and then reduced it by following (\ref{eq:alpha}). We also set the discount factor, $\gamma$, to be $0.6$, which means that the Q-learning algorithm tried to maximize the long-term reward. Obviously, our algorithm demonstrates a learning curve and quickly converges to the optimal solution after about 3000 training iterations. At the end of training cycles, our average evaluation score is around 8500. For some evaluation cycles, we can even achieve  9000 points, which is nearly the highest score human can achieve in one episode. In order to show the generalization, we also tested the trained Q-learning algorithm with random episode seeds. The results show that for most random seeds, our trained algorithm gives a very high score. The reason why one test performs bad is that there always be some unknown situations, which Mario is not trained. 
+Figure.~\ref{fig:fig1} shows the learning curves of evaluation score using the previously described optimized parameters. The discount factor, $\gamma$, is $0.6$, meaning that the Q-learning algorithm tried to maximize the long-term reward. Obviously, our algorithm demonstrates a learning curve and quickly converges to the optimal solution after about 3000 training iterations. At the end of training cycles, our average evaluation score is around 8500. For some evaluation cycles, we can even achieve  9000 points, which is nearly the highest score human can achieve in one episode.
 
-In addition, we plot the learning curves with fixed learning rate and low discount factor. As discussed above, in our training algorithm, we keep decreasing the learning rate. The figure indicates that with a fixed learning rate, when it converges, the converged solution is not optimal. A low discount factor means that the learning algorithm maximizes the short-term reward. In our learning algorithm, we gave positive reward for right movement and negative reward for left movement. If the algorithm try to maximize short-term reward, the Mario will always move the right. However, in some situations, the Mario should move to left to avoid monsters. In this case, the short-term reward maximization is not the optimal solution.
+In order to show the generalization, we also tested the trained Q-learning algorithm with random episode seeds. The results show that for most random seeds, our trained algorithm performs reasonably good. The reason that one test performs bad is that there always be some unknown situations, to which Mario is not trained. 
+
+In addition, we plot the learning curves with fixed learning rate ($\alpha = 0$ throughout training) and low discount factor ($\gamma = 0.2$). As discussed above, in our training algorithm, we keep decreasing the learning rate. The figure indicates that with a fixed learning rate, when it converges, the converged solution is not optimal and the variance in scores is larger. A low discount factor means that the learning algorithm maximizes the short-term reward. In our learning algorithm, we gave positive reward for right movement and negative reward for left movement. If the algorithm try to maximize short-term reward, Mario will always move the right. However, in some situations, Mario should stay or go left to avoid monsters. In this case, the short-term reward maximization is not the optimal solution.
  
 \putFig{fig2}{Winning Probability}{3.5}
-Figure.~\ref{fig:fig2} shows the winning probability. As the early stage of learning process, the winning probability is as low as 0.3. With the increase of training cycles, the winning probability increases and converges to around 0.85. For the low $\gamma$ learning, even the average probability is increasing but the variance is very high. For the fixed $\alpha$ learning, the learning curve converges but the converged value is not optimal.
+Figure.~\ref{fig:fig2} shows the winning probability learning curve. As the early stage of learning process, the winning probability is as low as 0.3. With the increase of training cycles, the winning probability increases and converges to around 0.9. For the low $\gamma$ learning, even the average probability is increasing but the variance is very high. For the fixed $\alpha$ learning, the learning curve converges but the converged value is not optimal. The curve demonstrates that our trained agent is consistently good on beating the level!
 
 \putFig{fig3}{Percentage of Monster Killed}{3.5}
-Figure.~\ref{fig:fig3} shows the percentage of monster killed. Since we generated the training episode by the same seed and setup, the total number of monsters within a episode is the same over training, and therefore, it is comparable. At beginning, the Q-values are generated randomly. Therefore, the killing percentage is very low. In the learning algorithm, we give a very high reward for killing, e.g. 60 for killing by fire and stomp. Hence, the Mario has the motivation to keep more monsters. The learning curve shows fast convergence of the killing probability within a few training episodes. There are two reasons that we give high reward for killing. Firstly, the killing action is given high score in evaluation and therefore, we can achieve a high score in evaluation.  Secondly, the Mario is safer when he kills more monsters.
+Figure.~\ref{fig:fig3} shows the percentage of monster killed. Since we generated the training episode by the same seed and setup, the total number of monsters within a episode is the same over training. At the beginning, the Q-values are generated randomly. Therefore, the killing percentage is very low. The learning curve shows fast convergence of the killing probability within a few training episodes, due to the high reward we gave. There are two reasons that we give high reward for killing. Firstly, the killing action is given high score in evaluation and therefore, we can achieve a high score in evaluation.  Secondly, the Mario is safer when he kills more monsters. 
 
 In this figure, the learning curve with fixed $\alpha$ shows a similar performance to our optimal learning curve. The learning curve with low $\gamma$ has very low mean and high variance.
 
@@ -188,26 +199,22 @@ In this figure, the learning curve with fixed $\alpha$ shows a similar performan
 \putFig{fig4}{Time Spent in Frames}{3.5}
 Figure.~\ref{fig:fig4} shows the time spent for the Mario to pass a episodes successfully. The optimal learning curve shows a fast convergence within 250 iterations. The learning curve with low $\gamma$ has a similar performance as the optimal learning curve. The reason is that the short-term reward maximization forces the Mario to keep moving rightward. However, as we discussed above, it is not optimal since the Mario will collide creatures with high probability. The learning algorithm with fixed $\alpha$ needs more time to win because the converged policy is not the best.
 
-%%figures here
-
-
-
-
-%\section{Progress and Preliminary Results}
-%We were able to implement the Q learning algorithm, the abstractions of Mario state and tasks using Java. The specific choice of keystrokes for each task is coded as predetermined. For example, if Mario is going to perform "Attack monster" task, he will jump if the foe is high, and he will shoot fireball to the direction of the foe. We note, however, another alternative is to run another RL state machine to learn the optimal keystrokes as in \cite{mohan2011object}. We will discuss the alternative in next section.
-%
-%With the preliminary design, our agent obtains an average score comparable to that of a simple Forward-and-Jump agent after 1000 episode trained. We haven't yet compared with other agents.
-%
-%\subsection{Next Step}
-%We consider several improvements to our project. First, we will consider use a second state machine to learn the optimal keystrokes as to increase performance of the tasks. Second, rather than updating Q-value every frame, we consider updating it every two or five frames. Updating every frame may not be necessary, since we found in many occasions, Mario's position only changes little in one frame, therefore neither the state nor the task should change in one frame's time. Updating less often allows us to relax the constraint on computational complexity.
-%Finally, we will tune the parameters in Q-learning to optimize our agent, and compare our results with the competition benchmarks.
 
 \section{Conclusion}
-In this project, we used Q-learning algorithm to control the Mario. Our learning algorithm demonstrates fast convergence to the optimal Q-value with high successful rate. The optimal policy also has high killing rate and needs less time to be successful. In addition, our results show that the optimal policy is generalized to tackle different and random environment. Further, we observe that long term reward maximization over-performs the short term reward maximization. Finally, we show the the decaying learning rate algorithm converges to a better policy than the fixed learning rate algorithm.
+In this project, we designed an automatic agent using Q-learning to play the Mario game. Our learning algorithm demonstrates fast convergence to the optimal Q-value with high successful rate. The optimal policy has high killing rate and consistently beat the level. In addition, our results show that the state description is general enough, that our optimal policy can tackle different, random environments. Further, we observe that long term reward maximization overperforms short term reward maximization. Finally, we show that using decaying learning rate converges to a better policy than using fixed learning rate.
 
-There are many future works regarding using machine learning to play Mario. For example, in our learning algorithm, we did not design the state for the Mario to grab mushroom and flowers. In addition, our algorithm focuses on optimizing the successful rate. Other design directions include maximizing the coin collection and maximizing the killing rate. We believe that our work provides a good introduction to this problem and will benefit the people with interests in using reinforcement learning to play computer game.
-
-
+Our work on our RL approach could be extended in a number of ways. For example, in our learning algorithm, we did not design the state for the Mario to grab mushroom and flowers. In addition, our algorithm focuses on optimizing the successful rate. Possible future work may include, but is not limited to:
+\begin{itemize}
+\item
+Extend our state to allow grabbing coins and upgrading.
+\item
+Vary the reward function to realize different objectives (e.g. killer-type Mario)
+\item
+Make the state design more precise to cope with the position rounding problem.
+\item
+Explore other RL approaches such as SARSA\cite{SARSA} and fuzzy-SARSA\cite{fuzzySARSA} to  reduce state space and increase robustness.
+\end{itemize}
+We believe that our work provides a good introduction to this problem and will benefit the people with interests in using reinforcement learning to play computer games.
 
 \newpage
 \bibliographystyle{ieeetr}
